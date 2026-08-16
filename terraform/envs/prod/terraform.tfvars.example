@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars and fill in.
+# terraform.tfvars is gitignored -- it holds your IP and email.
+
+github_repository = "animesh-samal/circuit-breaker"
+alert_email       = "animesh7667@gmail.com"
+
+# Your public IP as a /32, from `curl ifconfig.me`. Omit entirely to leave
+# port 22 closed and use SSM Session Manager instead, which is the better
+# default -- no open port, no key to lose, and every session is logged.
+# ssh_cidr = "203.0.113.7/32"
+
+# Set false if GitHub's OIDC provider already exists in this AWS account.
+# create_oidc_provider = false
+
+# monthly_budget_usd = "5"
+# instance_type      = "t3.micro"

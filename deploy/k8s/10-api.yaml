@@ -1,0 +1,196 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circuit-breaker-api
+  namespace: circuit-breaker
+  labels:
+    app.kubernetes.io/name: circuit-breaker-api
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+
+  selector:
+    matchLabels:
+      app: circuit-breaker-api
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # With 2 replicas: never drop below 1 serving pod, and add at most 1 extra
+      # during the roll. On a 1 GiB node, maxSurge: 2 would try to run four API
+      # pods at once and the new ones would sit Pending on memory.
+      maxUnavailable: 1
+      maxSurge: 1
+
+  template:
+    metadata:
+      labels:
+        app: circuit-breaker-api
+        app.kubernetes.io/name: circuit-breaker-api
+    spec:
+      serviceAccountName: circuit-breaker-api
+
+      # Longer than the readiness detection window plus the preStop sleep, so a
+      # terminating pod finishes in-flight work instead of being SIGKILLed.
+      terminationGracePeriodSeconds: 40
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: api
+          image: REPLACED_BY_CI
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: circuit-breaker-config
+
+          env:
+            # The pod tells the app which pod it is. Useful in logs, and it is
+            # how the console can highlight the replica serving your request.
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+
+          # Requests are what the scheduler reserves; limits are what the kernel
+          # enforces. Exceed a memory limit and the container is OOMKilled with
+          # no warning -- CPU over-limit merely throttles.
+          resources:
+            requests:
+              cpu: 40m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 192Mi
+
+          # Startup probe first. It gives the process up to 60s (12 x 5s) to
+          # come up, and liveness does not begin until it passes. Without it, a
+          # slow start looks identical to a hang and Kubernetes restarts the
+          # container forever.
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 12
+
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+
+          lifecycle:
+            preStop:
+              exec:
+                # Endpoint removal is eventually consistent: kube-proxy has to
+                # update rules on every node, and traffic keeps arriving during
+                # that window. Sleeping here holds the process open long enough
+                # for the removal to propagate, which is what actually delivers
+                # zero-downtime deploys.
+                command: ["sh", "-c", "sleep 8"]
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      # readOnlyRootFilesystem means the process cannot write anywhere except
+      # volumes we grant. Python needs somewhere for temporary files.
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      # Spread replicas across nodes when there is more than one. On a single
+      # node this is a no-op that costs nothing and becomes correct for free the
+      # day a second node appears.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: circuit-breaker-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circuit-breaker-api
+  namespace: circuit-breaker
+spec:
+  type: ClusterIP
+  selector:
+    app: circuit-breaker-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: circuit-breaker-api
+  namespace: circuit-breaker
+spec:
+  # Protects against *voluntary* disruption -- node drains, evictions. It does
+  # not stop the chaos endpoint, which deletes a pod directly; that guard is the
+  # replica floor in the API itself.
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: circuit-breaker-api
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: circuit-breaker-api
+  namespace: circuit-breaker
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: circuit-breaker-api
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      # Five minutes of sustained low load before removing a pod. Without this,
+      # a brief dip scales in and the next request spike scales back out --
+      # flapping, and every cycle costs a cold start.
+      stabilizationWindowSeconds: 300

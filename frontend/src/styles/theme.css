@@ -1,0 +1,1029 @@
+/* Theme system.
+ *
+ * Four bindings, switched by data-theme on <html>. Every colour in the app
+ * resolves through these variables -- no component hardcodes a hex value, so
+ * adding a fifth theme means adding one block here and nothing else.
+ *
+ * Folio is the default: warm ink and walnut rather than the blue-black and
+ * electric cyan that most developer portfolios default to.
+ */
+
+:root,
+[data-theme="folio"] {
+  --bg: #14100d;
+  --surface: #1c1713;
+  --surface-2: #241d18;
+  --border: #2e2620;
+  --border-strong: #43382e;
+  --text: #ede4d6;
+  --text-dim: #b9ac97;
+  --text-mute: #8a7c68;
+  --accent: #c9a227;
+  --accent-2: #5c8c7a;
+  --glow: rgba(201, 162, 39, 0.28);
+  --accent-contrast: #14100d;
+  --ok: #4fb286;
+  --warn: #d99a2b;
+  --danger: #c4553d;
+  --focus: #c9a227;
+}
+
+[data-theme="vellum"] {
+  --bg: #f2ead9;
+  --surface: #ece2ce;
+  --surface-2: #e4d8c0;
+  --border: #d2c3a8;
+  --border-strong: #b8a683;
+  --text: #2a2118;
+  --text-dim: #52463a;
+  --text-mute: #7a6b58;
+  --accent: #8a6d1f;
+  --accent-2: #3f7a68;
+  --glow: rgba(138, 109, 31, 0.22);
+  --accent-contrast: #f2ead9;
+  --ok: #2f7d5b;
+  --warn: #9c6b12;
+  --danger: #a8402a;
+  --focus: #8a6d1f;
+}
+
+[data-theme="blueprint"] {
+  --bg: #0c1a2b;
+  --surface: #12253a;
+  --surface-2: #173049;
+  --border: #22405c;
+  --border-strong: #325c80;
+  --text: #dce9f5;
+  --text-dim: #a8bfd6;
+  --text-mute: #7593b0;
+  --accent: #5aa9e6;
+  --accent-2: #e0a458;
+  --glow: rgba(90, 169, 230, 0.3);
+  --accent-contrast: #0c1a2b;
+  --ok: #4fb286;
+  --warn: #d99a2b;
+  --danger: #e2685a;
+  --focus: #5aa9e6;
+}
+
+[data-theme="oxblood"] {
+  --bg: #17100f;
+  --surface: #201615;
+  --surface-2: #291c1a;
+  --border: #3a2624;
+  --border-strong: #543733;
+  --text: #efe2dc;
+  --text-dim: #c4ada6;
+  --text-mute: #96796f;
+  --accent: #c4553d;
+  --accent-2: #d7b56d;
+  --glow: rgba(196, 85, 61, 0.3);
+  --accent-contrast: #17100f;
+  --ok: #5ba87f;
+  --warn: #d99a2b;
+  --danger: #d9634a;
+  --focus: #c4553d;
+}
+
+/* Meadow greens, warm cream, and the terracotta that turns up on every other
+   Ghibli poster. Light, but softer and warmer than Vellum. */
+[data-theme="ghibli"] {
+  --bg: #f0f3e6;
+  --surface: #e7edd9;
+  --surface-2: #dde6cb;
+  --border: #c3d0ac;
+  --border-strong: #a1b487;
+  --text: #2b3a2e;
+  --text-dim: #4c5d4e;
+  --text-mute: #6f7f6c;
+  --accent: #b8552f;
+  --accent-2: #4f8a5b;
+  --glow: rgba(184, 85, 47, 0.26);
+  --accent-contrast: #f7f9f0;
+  --ok: #4f8a5b;
+  --warn: #b8862b;
+  --danger: #a83c2c;
+  --focus: #b8552f;
+}
+
+/* Ghibli scene. Surfaces become translucent so the landscape reads through the
+   content, with a light backdrop blur to keep text legible over the clouds. */
+[data-theme="ghibli"] {
+  --surface: rgba(239, 244, 227, 0.82);
+  --surface-2: rgba(226, 235, 208, 0.86);
+}
+
+.ghibli-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ghibli-sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #a9d3e8 0%, #cfe6ee 34%, #e9f0dd 62%, #f0f3e6 100%);
+}
+
+.ghibli-sun {
+  position: absolute;
+  top: -12vh;
+  right: -8vw;
+  width: 60vw;
+  height: 60vw;
+  max-width: 720px;
+  max-height: 720px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 246, 214, 0.95) 0%, rgba(255, 244, 205, 0.35) 42%, rgba(255, 244, 205, 0) 70%);
+}
+
+.ghibli-cloud {
+  position: absolute;
+  left: 0;
+  will-change: transform;
+  animation-name: ghibli-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.ghibli-mote {
+  position: absolute;
+  bottom: -6vh;
+  border-radius: 50%;
+  background: rgba(255, 252, 232, 0.9);
+  box-shadow: 0 0 6px rgba(255, 250, 214, 0.8);
+  will-change: transform, opacity;
+  animation-name: ghibli-rise;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.ghibli-hills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 46vh;
+  min-height: 280px;
+}
+
+.ghibli-grass {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12vh;
+  background: linear-gradient(180deg, rgba(74, 118, 66, 0) 0%, rgba(74, 118, 66, 0.55) 100%);
+}
+
+@keyframes ghibli-drift {
+  from {
+    translate: -30vw 0;
+  }
+  to {
+    translate: 130vw 0;
+  }
+}
+
+@keyframes ghibli-rise {
+  0% {
+    translate: 0 0;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    translate: 3vw -108vh;
+    opacity: 0;
+  }
+}
+
+/* The global reduced-motion rule collapses durations to near zero, which would
+   park the clouds at the end of their travel. Stop them where they are instead,
+   and drop the motes entirely. */
+@media (prefers-reduced-motion: reduce) {
+  .ghibli-cloud {
+    animation: none !important;
+    translate: 20vw 0;
+  }
+  .ghibli-mote {
+    display: none;
+  }
+}
+
+:root {
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --measure: 66ch;
+  --page: 1120px;
+  --radius: 6px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Ambient tint. Two very faint accent-coloured pools stop the background being
+   one flat field of a single hue, which is what made the themes read as bland.
+   Fixed, behind everything, and inert. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(60vw 50vh at 12% -8%, var(--glow), transparent 70%),
+    radial-gradient(52vw 44vh at 92% 4%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent 72%);
+}
+
+/* Fine grain. A single inline SVG turbulence tile, no network request, held at
+   very low opacity -- enough to stop large flat areas looking like plastic. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+[data-theme="ghibli"] body::before,
+[data-theme="ghibli"] body::after {
+  display: none;
+}
+
+/* Accent bar under every page heading. Cheap, and it gives each page a spot of
+   colour that is not the single theme hue. */
+.page h1 {
+  position: relative;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.page h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 58px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+/* Shared card treatment: a gradient hairline across the top edge, and a soft
+   accent-tinted glow on hover. The hairline is what stops a panel reading as a
+   grey rectangle. */
+.card,
+.utility-box,
+.sidebar,
+.skill-card,
+.post-card {
+  position: relative;
+}
+
+.card::before,
+.utility-box::before,
+.sidebar::before,
+.skill-card::before,
+.post-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 180ms ease, box-shadow 220ms ease;
+}
+
+.card:hover,
+.skill-card:hover,
+.post-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 10px 30px -18px var(--glow), 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3rem); }
+h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+h3 { font-size: 1.25rem; }
+
+p {
+  margin: 0 0 1rem;
+  color: var(--text-dim);
+}
+
+a {
+  color: var(--text);
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-color: var(--accent);
+}
+
+/* Visible focus for every interactive element. Keyboard users should never
+   have to guess where they are. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text is left-aligned; the containers holding it are centred. Left-aligned
+   text gives the eye a fixed left edge to return to on every line, which
+   centred text does not. */
+.page {
+  text-align: left;
+}
+
+/* Escape hatch. Tabular data, logs and terminal output must stay left-aligned
+   -- centred columns of numbers are unreadable. */
+.left {
+  text-align: left;
+}
+
+.prose {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  max-width: var(--measure);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Wordmark. All caps with wide tracking in the display serif -- the width is
+   what gives it presence, not weight or size. */
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.wordmark:hover {
+  color: var(--accent);
+}
+
+/* One centred column holds the utility box and, beneath it, the sidebar and
+   the content. */
+.page-wrap {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+/* Utility box. An instrument panel rather than a name card: collapsed it
+   carries identity and availability, expanded it reports the running system. */
+.utility-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.utility-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.utility-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 0.9rem 1.25rem;
+}
+
+.utility-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/* Name and role are the first thing anyone reads, so they carry the size. The
+   system fields beneath them are reference material and stay quiet. */
+.utility-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 3.6vw, 1.6rem);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  color: var(--text);
+  text-decoration: none;
+  display: block;
+}
+
+.utility-role {
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  margin: 0.3rem 0 0;
+}
+
+.utility-extra {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+/* Key and value on one line. Stacking them doubled the height of this block
+   for no gain in legibility. */
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.stat > .label {
+  min-width: 62px;
+}
+
+.stat > .val {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.utility-readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.7rem 1.5rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* Buttons carry both accents, so the primary action is the most saturated thing
+   on the page rather than one more block of the theme hue. */
+.btn-primary {
+  display: inline-block;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  color: var(--accent-contrast);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent-2) 52%, var(--accent)));
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px -10px var(--glow);
+  transition: box-shadow 200ms ease, filter 200ms ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 12px 28px -10px var(--glow);
+  filter: brightness(1.07);
+}
+
+.btn-ghost {
+  display: inline-block;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.control--sm {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.6875rem;
+}
+
+.chev {
+  display: inline-block;
+  transition: transform 200ms ease;
+}
+
+.chev[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+/* On a phone the box must not eat the viewport. Collapsed it shows identity
+   only -- roughly 110px, about 13% of a typical screen. Everything else moves
+   into the dropdown rather than being duplicated in the DOM. */
+@media (max-width: 900px) {
+  .utility-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0.75rem 1rem;
+  }
+
+  .utility-extra {
+    display: none;
+  }
+
+  .utility-box[data-open="true"] .utility-extra {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .utility-avatar {
+    width: 48px !important;
+    height: 48px !important;
+  }
+}
+
+.sidebar {
+  position: sticky;
+  top: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+/* Nav items read as buttons on hover: a surface and a hairline appear, nothing
+   moves. Transform and glow would be the flashy version -- this is the quiet
+   one. Colour, background and border are also the three cheapest properties to
+   animate; anything touching layout would cost a reflow per frame. */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  color: var(--text-mute);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+.nav-item.is-active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border-strong));
+}
+
+/* Skills. One card per category, each skill a chip.
+   translateY is used rather than margin or padding on hover: transforms are
+   composited on the GPU and cost no layout work, whereas nudging a margin would
+   reflow every sibling chip in the card. */
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+  gap: 1rem;
+}
+
+.skill-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem 1.1rem;
+  transition: border-color 180ms ease;
+}
+
+.skill-card > .label {
+  color: var(--accent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  padding: 0.28rem 0.6rem;
+  color: var(--text-mute);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.chip:hover {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* Blog title cards. The whole card is one link, so the hit area is the card
+   rather than the headline -- easier to hit on a phone and clearer to a screen
+   reader, which announces one link per article instead of three. */
+.post-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.post-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.post-card-link {
+  display: block;
+  padding: 1.25rem 1.4rem;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 10px;
+}
+
+.post-card-link h2 {
+  transition: color 180ms ease;
+}
+
+.post-card:hover .post-card-link h2 {
+  color: var(--accent);
+}
+
+/* Frosted surfaces sit over the Ghibli landscape without losing legibility. */
+[data-theme="ghibli"] .sidebar,
+[data-theme="ghibli"] .utility-box,
+[data-theme="ghibli"] .skill-card,
+[data-theme="ghibli"] .post-card {
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+/* ---------------------------------------------------------------------------
+   Infrastructure console
+   --------------------------------------------------------------------------- */
+
+/* Instrument panel. A faint ruled grid plus a slow scanline sweep -- the sweep
+   is a transform, so it never repaints the panel beneath it. */
+.holo-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background:
+    linear-gradient(color-mix(in srgb, var(--accent) 7%, transparent) 1px, transparent 1px) 0 0 / 100% 30px,
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 7%, transparent) 1px, transparent 1px) 0 0 / 30px 100%,
+    var(--surface);
+}
+
+.holo-panel::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 120px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 9%, transparent), transparent);
+  animation: holo-sweep 7s linear infinite;
+}
+
+@keyframes holo-sweep {
+  from {
+    translate: 0 -140px;
+  }
+  to {
+    translate: 0 calc(100% + 140px);
+  }
+}
+
+/* Pods. A real cube in CSS 3D: six faces, preserve-3d, one rotation animation.
+   The whole thing is composited, so forty of them cost about as much as one. */
+.pod-scene {
+  perspective: 900px;
+}
+
+.pod-cube {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  transform-style: preserve-3d;
+  animation: pod-spin 16s linear infinite;
+}
+
+.pod-face {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--pod-edge);
+  background: var(--pod-fill);
+}
+
+.pod-f { transform: translateZ(22px); }
+.pod-b { transform: rotateY(180deg) translateZ(22px); }
+.pod-r { transform: rotateY(90deg) translateZ(22px); }
+.pod-l { transform: rotateY(-90deg) translateZ(22px); }
+.pod-u { transform: rotateX(90deg) translateZ(22px); }
+.pod-d { transform: rotateX(-90deg) translateZ(22px); }
+
+@keyframes pod-spin {
+  from {
+    transform: rotateX(-20deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(-20deg) rotateY(360deg);
+  }
+}
+
+.pod-halo {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  box-shadow: 0 0 22px var(--pod-glow);
+  animation: pod-pulse 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pod-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    scale: 0.94;
+  }
+  50% {
+    opacity: 0.8;
+    scale: 1.04;
+  }
+}
+
+/* A restarting pod spins fast. Motion carries the state before the label does. */
+.pod-cube[data-state="restarting"] {
+  animation-duration: 2.2s;
+}
+
+.pod-cube[data-state="pending"] {
+  animation-duration: 6s;
+}
+
+.pod-tile {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 0.9rem 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: background-color 180ms ease;
+}
+
+.pod-tile:hover {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+/* Connector between a service and its pods. Dash offset animates, which reads
+   as traffic moving along the wire. */
+.flow-line {
+  flex: 1;
+  min-width: 28px;
+  height: 2px;
+  overflow: visible;
+}
+
+.flow-line line {
+  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+  stroke-width: 2;
+  stroke-dasharray: 5 7;
+  animation: flow-dash 1.1s linear infinite;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+.stat-tile {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 0.9rem;
+  background: var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pod-cube,
+  .pod-halo,
+  .flow-line line,
+  .holo-panel::after {
+    animation: none !important;
+  }
+  .pod-cube {
+    transform: rotateX(-20deg) rotateY(-32deg);
+  }
+}
+
+/* Indicator lamp. Dark when idle, lit with a soft halo when active. The halo is
+   a box-shadow ring rather than a blur so it stays crisp and costs nothing. */
+.led {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+
+.nav-item.is-active .led,
+.led--on {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent);
+}
+
+.led--warn {
+  background: var(--warn);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 20%, transparent);
+}
+
+.led--down {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
+}
+
+.control {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.45rem 0.7rem;
+  background: var(--surface);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.control:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* Single breakpoint. The layout is one column of readable text plus data
+   panels; it does not need more than one. */
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-top: 1rem;
+  }
+  /* The sidebar becomes a sticky horizontal strip. Nav stays reachable from
+     anywhere on the page instead of requiring a scroll back to the top, and it
+     is the same markup -- only the flow direction changes. */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .sidebar-head {
+    display: none;
+  }
+
+  .sidebar nav ul {
+    display: flex !important;
+    gap: 0.35rem !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .sidebar nav ul::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-item {
+    white-space: nowrap;
+  }
+}
+
+/* Skip link -- keyboard users land here first and can jump past the nav. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  padding: 0.75rem 1.25rem;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: 0;
+}

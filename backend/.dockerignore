@@ -1,0 +1,27 @@
+# Everything here is excluded from the build context -- the tarball Docker ships
+# to the daemon before the first instruction runs. Two reasons this matters:
+#
+#   1. Size. A large context makes every build slow, even cached ones.
+#   2. Security. Anything sent can end up in a layer. `.git` in particular
+#      carries full history, including credentials that were "removed" in a
+#      later commit but remain in earlier ones.
+
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+tests
+Dockerfile
+.dockerignore
+README.md
+.env
+.env.*
+*.pem
+*.key

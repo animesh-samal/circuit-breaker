@@ -1,0 +1,31 @@
+# Non-secret configuration.
+#
+# There are no Secrets in this project, which is the point. The API reaches AWS
+# through the node's instance profile and Kubernetes through its ServiceAccount
+# token -- both issued at runtime, both short-lived, neither stored anywhere.
+# A Secret here would be a credential to lose.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: circuit-breaker-config
+  namespace: circuit-breaker
+data:
+  ENVIRONMENT: "prod"
+  LOG_LEVEL: "INFO"
+  AWS_REGION: "ap-south-1"
+  K8S_NAMESPACE: "circuit-breaker"
+  DEPLOYS_TABLE: "circuit-breaker-deploys"
+  COST_CACHE_TABLE: "circuit-breaker-cache"
+
+  # Must stay false in the cluster. Mock data indistinguishable from real
+  # telemetry is worse than no telemetry.
+  MOCK_INFRA: "false"
+
+  CHAOS_ENABLED: "true"
+  CHAOS_MIN_REPLICAS: "2"
+
+  # Cost Explorer bills $0.01 per request. 86400s means one call a day.
+  COST_TTL: "86400"
+  CLUSTER_TTL: "10"
+  METRICS_TTL: "60"
+  DEPLOYS_TTL: "300"

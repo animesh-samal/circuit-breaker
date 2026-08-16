@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-theme="folio">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Animesh Samal — DevOps Engineer</title>
+    <meta
+      name="description"
+      content="DevOps engineer in Hyderabad. This site runs on Kubernetes and reports its own infrastructure live."
+    />
+
+    <meta property="og:title" content="Animesh Samal — DevOps Engineer" />
+    <meta
+      property="og:description"
+      content="A portfolio that reports its own infrastructure live: pod status, deploy history, spend, and a button that breaks it on purpose."
+    />
+    <meta property="og:type" content="website" />
+
+    <!-- preconnect shaves a round trip off first paint; fonts are otherwise
+         discovered only after the CSS parses -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Set the theme before first paint. Without this the page renders in the
+         default binding and then snaps to the stored one -- a visible flash
+         that reads as a bug. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("cb-theme");
+          if (!t) {
+            t = window.matchMedia("(prefers-color-scheme: light)").matches ? "vellum" : "folio";
+          }
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          /* storage unavailable; the default in the markup stands */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

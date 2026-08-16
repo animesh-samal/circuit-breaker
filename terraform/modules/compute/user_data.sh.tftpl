@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# Node bootstrap. Runs once, on first boot, as root.
+#
+# set -euo pipefail: exit on error, on undefined variable, and on any failure
+# within a pipeline. Without it a failed step here is silent and the instance
+# comes up half-configured, which is far harder to diagnose than a clean failure.
+set -euo pipefail
+
+exec > >(tee /var/log/bootstrap.log) 2>&1
+echo "bootstrap starting $(date -Is)"
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
+apt-get install -y curl ca-certificates jq unzip
+
+# --- swap ------------------------------------------------------------------
+# A t3.micro has 1 GiB. k3s alone takes ~450 MiB, leaving little room for two
+# Python pods and an ingress controller. 2 GiB of swap is the difference between
+# a node that works and one that OOM-kills a pod every few hours.
+#
+# This is a lab affordance, not a production practice: swapping a latency-
+# sensitive workload is a good way to turn a fast service into a slow one. The
+# honest alternative is a larger instance, which doubles the bill.
+if ! swapon --show | grep -q /swapfile; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+# --- k3s -------------------------------------------------------------------
+# Traefik and servicelb are left enabled -- they are k3s defaults and they are
+# what makes an Ingress resource actually reachable on a single node. servicelb
+# binds the controller to the host's ports 80 and 443; without it a
+# LoadBalancer Service stays <pending> forever with nothing to fulfil it.
+#
+# Production would more often run ingress-nginx. The Ingress manifests in
+# deploy/k8s are controller-agnostic and would move across unchanged; only the
+# ingressClassName would differ.
+#
+# --write-kubeconfig-mode 644: lets the ubuntu user run kubectl without sudo.
+curl -sfL https://get.k3s.io | \
+  INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --node-label node=${node_label}" \
+  K3S_TOKEN='${k3s_token}' \
+  sh -
+
+# Wait for the API to answer before anything downstream assumes it exists.
+for _ in $(seq 1 60); do
+  if k3s kubectl get --raw='/readyz' >/dev/null 2>&1; then
+    echo "k3s ready"
+    break
+  fi
+  sleep 5
+done
+
+k3s kubectl create namespace ${project} --dry-run=client -o yaml | k3s kubectl apply -f -
+
+# --- CloudWatch agent ------------------------------------------------------
+curl -sfLo /tmp/cwagent.deb \
+  "https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb"
+dpkg -i -E /tmp/cwagent.deb
+
+cat >/opt/aws/amazon-cloudwatch-agent/etc/config.json <<'CWCONFIG'
+{
+  "agent": { "metrics_collection_interval": 60, "run_as_user": "root" },
+  "metrics": {
+    "namespace": "CircuitBreaker",
+    "append_dimensions": { "InstanceId": "$${aws:InstanceId}" },
+    "metrics_collected": {
+      "mem": { "measurement": [ "mem_used_percent" ] },
+      "disk": { "measurement": [ "used_percent" ], "resources": [ "/" ] }
+    }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/pods/**/*.log",
+            "log_group_name": "${log_group}",
+            "log_stream_name": "{instance_id}/pods",
+            "retention_in_days": 7
+          },
+          {
+            "file_path": "/var/log/bootstrap.log",
+            "log_group_name": "${log_group}",
+            "log_stream_name": "{instance_id}/bootstrap",
+            "retention_in_days": 7
+          }
+        ]
+      }
+    }
+  }
+}
+CWCONFIG
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/config.json
+
+# --- ECR credential refresh ------------------------------------------------
+# ECR tokens expire after 12 hours. Without a refresh the node pulls fine on day
+# one and fails on day two -- a genuinely confusing failure if you have not met
+# it before. This rewrites k3s's registry credentials every 8 hours.
+cat >/usr/local/bin/refresh-ecr <<'ECRSCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+REGION="__REGION__"
+ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+REGISTRY="$ACCOUNT.dkr.ecr.$REGION.amazonaws.com"
+PASSWORD=$(aws ecr get-login-password --region "$REGION")
+
+cat >/etc/rancher/k3s/registries.yaml <<EOF
+configs:
+  "$REGISTRY":
+    auth:
+      username: AWS
+      password: $PASSWORD
+EOF
+
+systemctl restart k3s
+ECRSCRIPT
+
+sed -i "s|__REGION__|${region}|" /usr/local/bin/refresh-ecr
+chmod 0700 /usr/local/bin/refresh-ecr
+
+curl -sfLo /tmp/awscli.zip "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+unzip -q /tmp/awscli.zip -d /tmp && /tmp/aws/install
+
+/usr/local/bin/refresh-ecr
+
+cat >/etc/systemd/system/refresh-ecr.timer <<'TIMER'
+[Unit]
+Description=Refresh ECR pull credentials
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=8h
+[Install]
+WantedBy=timers.target
+TIMER
+
+cat >/etc/systemd/system/refresh-ecr.service <<'SERVICE'
+[Unit]
+Description=Refresh ECR pull credentials
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/refresh-ecr
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now refresh-ecr.timer
+
+echo "bootstrap complete $(date -Is)"

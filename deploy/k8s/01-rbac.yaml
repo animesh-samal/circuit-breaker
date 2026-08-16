@@ -1,0 +1,58 @@
+# RBAC for the API.
+#
+# This is the security control that makes the public chaos endpoint acceptable.
+# The token mounted into the API pods can:
+#
+#   - read pods and deployments, in this namespace only
+#   - delete pods, in this namespace only
+#
+# It cannot read Secrets, touch another namespace, scale or modify a Deployment,
+# or see anything cluster-wide. If someone finds the endpoint and hammers it,
+# the worst available outcome is deleting a pod that Kubernetes immediately
+# recreates -- which is the demonstration anyway.
+#
+# Role, not ClusterRole. A ClusterRole with the same verbs would grant them
+# across every namespace in the cluster, which is the usual way this gets done
+# wrong.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: circuit-breaker-api
+  namespace: circuit-breaker
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: circuit-breaker-api
+  namespace: circuit-breaker
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: circuit-breaker-api
+  namespace: circuit-breaker
+subjects:
+  - kind: ServiceAccount
+    name: circuit-breaker-api
+    namespace: circuit-breaker
+roleRef:
+  kind: Role
+  name: circuit-breaker-api
+  apiGroup: rbac.authorization.k8s.io
+---
+# The web pods talk to nothing. Giving them a token they never use would be a
+# credential sitting on disk for no reason.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: circuit-breaker-web
+  namespace: circuit-breaker
+automountServiceAccountToken: false

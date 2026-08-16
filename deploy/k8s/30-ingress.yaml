@@ -1,0 +1,36 @@
+# The edge.
+#
+# Path-based routing is the reason we run two containers rather than letting
+# FastAPI serve the static files: /api reaches the Python service, everything
+# else reaches nginx, and the two release independently.
+#
+# Rule order matters. /api is listed first and uses Prefix matching; the
+# catch-all / would otherwise swallow every request including API calls.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: circuit-breaker
+  namespace: circuit-breaker
+  annotations:
+    # Traefik is what k3s ships. This manifest is otherwise controller-agnostic
+    # -- moving to ingress-nginx would change this class name and nothing else.
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: circuit-breaker-api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: circuit-breaker-web
+                port:
+                  number: 80

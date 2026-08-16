@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Explicit beats setuptools' flat-layout auto-discovery, which guesses from the
+# directory tree and breaks the moment a second top-level folder appears.
+packages = ["app", "app.core", "app.routers"]
+
+[project]
+name = "circuit-breaker-api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    # Plain uvicorn, not uvicorn[standard]. The "standard" extra pulls in
+    # httptools, watchfiles and uvloop -- compiled C/Rust packages that add
+    # install fragility and buy nothing at this scale. Revisit only if
+    # profiling shows the HTTP layer is a bottleneck, which it will not.
+    "uvicorn>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "boto3>=1.35",
+    "kubernetes>=31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "httpx>=0.27",
+    "ruff>=0.7",
+    "mypy>=1.13",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "S", "C4", "SIM", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --cov=app --cov-report=term-missing --cov-fail-under=80"
