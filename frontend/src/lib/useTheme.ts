@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 /* Labels say what the theme does before they say what it is called. A control
    labelled "Folio" tells a first-time visitor nothing; "Dark" does. */
@@ -39,12 +39,5 @@ export function useTheme() {
     }
   }, [theme]);
 
-  const cycle = useCallback(() => {
-    setTheme((current) => {
-      const i = THEMES.findIndex((t) => t.id === current);
-      return THEMES[(i + 1) % THEMES.length].id;
-    });
-  }, []);
-
-  return { theme, setTheme, cycle };
+  return { theme, setTheme };
 }

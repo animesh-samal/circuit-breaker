@@ -4,14 +4,17 @@ import { NavLink } from "react-router-dom";
 import { api } from "../lib/api";
 import Icon, { type IconName } from "./Icons";
 
-const LINKS: Array<{ to: string; label: string; icon: IconName; end?: boolean }> = [
+// `end` is required rather than optional. Under exactOptionalPropertyTypes,
+// passing `end={undefined}` is not the same as omitting the prop, and NavLink
+// accepts the omission but not the explicit undefined.
+const LINKS: Array<{ to: string; label: string; icon: IconName; end: boolean }> = [
   { to: "/", label: "Home", icon: "home", end: true },
-  { to: "/about", label: "About", icon: "user" },
-  { to: "/experience", label: "Experience", icon: "briefcase" },
-  { to: "/infrastructure", label: "Infrastructure", icon: "server" },
-  { to: "/terminal", label: "Terminal", icon: "terminal" },
-  { to: "/blog", label: "Writing", icon: "book" },
-  { to: "/contact", label: "Contact", icon: "mail" },
+  { to: "/about", label: "About", icon: "user", end: false },
+  { to: "/experience", label: "Experience", icon: "briefcase", end: false },
+  { to: "/infrastructure", label: "Infrastructure", icon: "server", end: false },
+  { to: "/terminal", label: "Terminal", icon: "terminal", end: false },
+  { to: "/blog", label: "Writing", icon: "book", end: false },
+  { to: "/contact", label: "Contact", icon: "mail", end: false },
 ];
 
 type Health = "unknown" | "ok" | "degraded" | "down";
