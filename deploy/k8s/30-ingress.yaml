@@ -6,14 +6,91 @@
 #
 # Rule order matters. /api is listed first and uses Prefix matching; the
 # catch-all / would otherwise swallow every request including API calls.
+
+# Redirects HTTP to HTTPS at the edge. A Traefik CRD rather than an annotation,
+# because middleware is a first-class object that other routers can reuse.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: circuit-breaker
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: circuit-breaker
   namespace: circuit-breaker
   annotations:
-    # Traefik is what k3s ships. This manifest is otherwise controller-agnostic
-    # -- moving to ingress-nginx would change this class name and nothing else.
+    # Switch to letsencrypt-prod once a staging certificate has been issued
+    # successfully. See 40-issuers.yaml for why staging comes first.
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: circuit-breaker-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - animesh.space
+        - www.animesh.space
+      # cert-manager writes the issued certificate here. The Secret does not
+      # exist yet and must not be created by hand -- the controller owns it.
+      secretName: circuit-breaker-tls
+
+  rules:
+    - host: animesh.space
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: circuit-breaker-api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: circuit-breaker-web
+                port:
+                  number: 80
+
+    - host: www.animesh.space
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: circuit-breaker-api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: circuit-breaker-web
+                port:
+                  number: 80
+---
+# Separate Ingress with no host, so the raw IP keeps working. Useful while DNS
+# propagates and for debugging when you suspect DNS rather than the cluster.
+# No TLS here -- a certificate cannot be issued for an IP address.
+#
+# Also deliberately not covered by the HTTPS redirect: redirecting the IP to
+# https://<ip> would produce a certificate error rather than a working page.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: circuit-breaker-direct
+  namespace: circuit-breaker
+  annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   ingressClassName: traefik

@@ -224,5 +224,5 @@ jobs:
             echo "|---|---|"
             echo "| Commit | \`${{ steps.v.outputs.sha }}\` |"
             echo "| Result | ${{ steps.deploy.outcome }} |"
-            echo "| Site | http://3.111.200.165 |"
+            echo "| Site | https://animesh.space |"
           } >> "$GITHUB_STEP_SUMMARY"

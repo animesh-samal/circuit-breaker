@@ -35,6 +35,16 @@ fi
 $KUBECTL apply -f "$WORK/00-namespace.yaml" -f "$WORK/01-rbac.yaml" -f "$WORK/02-config.yaml"
 $KUBECTL apply -f "$WORK/10-api.yaml" -f "$WORK/20-web.yaml" -f "$WORK/30-ingress.yaml"
 
+# Issuers are cluster-scoped and change rarely, but applying them is idempotent
+# and keeps the cluster's certificate configuration in version control rather
+# than in whatever state someone left it in. Skipped if cert-manager's CRDs are
+# absent, so the deploy still works on a cluster without it installed.
+if $KUBECTL get crd clusterissuers.cert-manager.io >/dev/null 2>&1; then
+  $KUBECTL apply -f "$WORK/40-issuers.yaml"
+else
+  echo "cert-manager not installed; skipping issuers"
+fi
+
 rollout() {
   local deploy="$1"
   if ! $KUBECTL -n "$NS" rollout status "deploy/$deploy" --timeout="$TIMEOUT"; then

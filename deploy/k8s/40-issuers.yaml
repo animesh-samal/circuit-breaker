@@ -1,0 +1,60 @@
+# Certificate issuers.
+#
+# Two of them, and using staging first is not optional discipline -- it is how
+# you avoid being locked out.
+#
+# Let's Encrypt production rate-limits hard: 5 failed validations per account,
+# per hostname, per hour, and 50 certificates per domain per week. Those limits
+# are trivially hit while getting DNS, ingress and firewall rules right, and
+# once hit you wait. The staging endpoint has vastly looser limits and issues
+# certificates from an untrusted root -- browsers will warn, which is fine,
+# because the only question staging answers is "did the ACME challenge succeed".
+#
+# Get a staging certificate first. Then switch the Ingress annotation to prod
+# and delete the staging Secret so a fresh certificate is requested.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: animesh7667@gmail.com
+
+    # Where the ACME account key is stored. This is the account identity, not
+    # the certificate -- losing it means registering a new account, which
+    # resets your rate-limit budget rather than breaking anything.
+    privateKeySecretRef:
+      name: letsencrypt-staging-account
+
+    solvers:
+      # HTTP-01: Let's Encrypt fetches a token from
+      # http://animesh.space/.well-known/acme-challenge/<token>
+      # cert-manager creates a temporary pod and ingress rule to serve it.
+      #
+      # This requires port 80 reachable from the public internet. It is why the
+      # security group opens 80 as well as 443, and why an HTTP-to-HTTPS
+      # redirect must not swallow the .well-known path.
+      #
+      # DNS-01 is the alternative -- it proves control by writing a TXT record,
+      # works without inbound HTTP, and is required for wildcard certificates.
+      # It needs API credentials for the DNS provider, which GoDaddy makes
+      # awkward, so HTTP-01 is the right call here.
+      - http01:
+          ingress:
+            ingressClassName: traefik
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: animesh7667@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-account
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: traefik
