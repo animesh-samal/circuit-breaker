@@ -33,7 +33,7 @@ import logging
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-class BreakerState(str, Enum):
+class BreakerState(StrEnum):
     CLOSED = "closed"
     OPEN = "open"
     HALF_OPEN = "half_open"
@@ -77,6 +77,18 @@ class CircuitBreaker:
     recovery_timeout: float = 30.0
     half_open_successes: int = 1
 
+    # Time is a dependency, so it is injected rather than reached for.
+    #
+    # Production passes nothing and gets time.monotonic -- monotonic rather than
+    # time.time because the wall clock can step backwards on an NTP correction,
+    # which would make a breaker appear to have opened in the future.
+    #
+    # Tests pass a fake and control time exactly. The alternative is sleeping in
+    # tests, which is both slow and unreliable: asyncio fires timers up to one
+    # clock-resolution early, and on Windows that is ~15.6ms, so a "60ms" sleep
+    # can return after 45ms and a timing assertion fails intermittently.
+    clock: Callable[[], float] = time.monotonic
+
     _state: BreakerState = field(default=BreakerState.CLOSED, init=False)
     _consecutive_failures: int = field(default=0, init=False)
     _half_open_successes: int = field(default=0, init=False)
@@ -110,7 +122,9 @@ class CircuitBreaker:
         )
 
     def _recovery_elapsed(self) -> bool:
-        return self._opened_at is not None and (time.monotonic() - self._opened_at) >= self.recovery_timeout
+        if self._opened_at is None:
+            return False
+        return (self.clock() - self._opened_at) >= self.recovery_timeout
 
     # -- the call path -----------------------------------------------------
 
@@ -130,12 +144,12 @@ class CircuitBreaker:
                     logger.info("breaker %s half-open, probing", self.name)
                 else:
                     self._total_rejections += 1
-                    retry_after = self.recovery_timeout - (time.monotonic() - (self._opened_at or 0.0))
+                    retry_after = self.recovery_timeout - (self.clock() - (self._opened_at or 0.0))
                     raise BreakerOpenError(self.name, max(retry_after, 0.0))
 
         try:
             result = await fn()
-        except Exception as exc:  # noqa: BLE001 -- any upstream failure counts
+        except Exception as exc:
             await self._record_failure(exc)
             raise
         else:
@@ -166,7 +180,10 @@ class CircuitBreaker:
 
             # A failed probe re-opens immediately -- one success was requested
             # and one failure was returned, so there is nothing to deliberate.
-            if self._state is BreakerState.HALF_OPEN or self._consecutive_failures >= self.failure_threshold:
+            if (
+                self._state is BreakerState.HALF_OPEN
+                or self._consecutive_failures >= self.failure_threshold
+            ):
                 if self._state is not BreakerState.OPEN:
                     logger.warning(
                         "breaker %s opened after %d failures: %s",
@@ -175,7 +192,7 @@ class CircuitBreaker:
                         self._last_error,
                     )
                 self._state = BreakerState.OPEN
-                self._opened_at = time.monotonic()
+                self._opened_at = self.clock()
 
     def reset(self) -> None:
         """Force closed. Tests and the admin path only."""

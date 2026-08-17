@@ -91,21 +91,40 @@ data "aws_iam_policy_document" "deploy" {
     resources = var.dynamodb_table_arns
   }
 
-  # Roll the deployment via SSM rather than opening the Kubernetes API to the
+  # Roll the deployment via SSM rather than exposing the Kubernetes API to the
   # internet. The pipeline sends a command to the node; the API server stays
-  # bound to localhost.
+  # bound to localhost and there is no kubeconfig in GitHub.
   statement {
-    sid     = "RollDeployment"
-    actions = ["ssm:SendCommand"]
-    resources = [
-      "arn:aws:ssm:${var.region}::document/AWS-RunShellScript",
-      "arn:aws:ec2:${var.region}:*:instance/${var.node_instance_id}",
-    ]
+    sid       = "RunShellScript"
+    actions   = ["ssm:SendCommand"]
+    resources = ["arn:aws:ssm:${var.region}::document/AWS-RunShellScript"]
+  }
+
+  # Scoped by tag, not by instance ID. Hardcoding the ID means the policy
+  # silently stops matching the moment the node is replaced -- and it would fail
+  # at deploy time, not at apply time, which is the worst place to find out.
+  statement {
+    sid       = "TargetProjectInstances"
+    actions   = ["ssm:SendCommand"]
+    resources = ["arn:aws:ec2:${var.region}:*:instance/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "ssm:resourceTag/Project"
+      values   = [var.project]
+    }
   }
 
   statement {
     sid       = "ReadCommandResult"
     actions   = ["ssm:GetCommandInvocation", "ssm:ListCommandInvocations"]
+    resources = ["*"]
+  }
+
+  # Lets the pipeline find the node by tag instead of being told its ID.
+  statement {
+    sid       = "FindNode"
+    actions   = ["ec2:DescribeInstances"]
     resources = ["*"]
   }
 }

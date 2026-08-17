@@ -2,7 +2,6 @@ variable "project" { type = string }
 variable "region" { type = string }
 variable "ecr_repository_arns" { type = list(string) }
 variable "dynamodb_table_arns" { type = list(string) }
-variable "node_instance_id" { type = string }
 
 variable "github_repository" {
   description = "owner/repo, e.g. animesh-samal/circuit-breaker"

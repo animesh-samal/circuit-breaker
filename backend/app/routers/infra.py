@@ -13,33 +13,25 @@ of this project.
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
 
 from app.clients import mock
 from app.clients.aws import aws
-from app.clients.k8s import KubernetesUnavailable, k8s
+from app.clients.k8s import KubernetesUnavailableError, k8s
 from app.core.breaker import BreakerOpenError, registry
 from app.core.config import get_settings
 from app.core.resilient import Result, resilient_fetch
 
 router = APIRouter(tags=["infrastructure"])
 
-T = TypeVar("T")
 
-
-class Envelope(BaseModel, Generic[T]):
-    data: T
-    source: str          # live | cache | stale | mock
-    degraded: bool
-    age_seconds: float
-    breaker_state: str
-    error: str | None = None
-    mock: bool = False
-
-
+# The envelope shape -- data, source, degraded, age_seconds, breaker_state,
+# error, mock -- is documented in lib/api.ts on the frontend, which is the only
+# consumer. A Pydantic model existed here briefly and was removed: it was never
+# used as a response_model, so it duplicated the contract without enforcing it,
+# which is worse than not having one.
 def _wrap(result: Result[Any]) -> dict[str, Any]:
     return {
         "data": result.value,
@@ -77,7 +69,7 @@ async def cluster() -> dict[str, Any]:
 
     try:
         return _wrap(await resilient_fetch("kubernetes", fetch, ttl=settings.cluster_ttl))
-    except (BreakerOpenError, KubernetesUnavailable) as exc:
+    except (BreakerOpenError, KubernetesUnavailableError) as exc:
         # 503, not 500. This is a dependency being unavailable, not a defect in
         # this service -- and the distinction matters to anything consuming the
         # status code, including alerting.

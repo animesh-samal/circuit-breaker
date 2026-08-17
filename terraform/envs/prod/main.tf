@@ -88,7 +88,6 @@ module "identity" {
   github_repository    = var.github_repository
   ecr_repository_arns  = module.registry.repository_arns
   dynamodb_table_arns  = module.data.table_arns
-  node_instance_id     = module.compute.instance_id
   create_oidc_provider = var.create_oidc_provider
 }
 

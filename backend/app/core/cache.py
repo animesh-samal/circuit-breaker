@@ -23,13 +23,14 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
-
-T = TypeVar("T")
+from typing import Any
 
 
+# PEP 695 type parameters, available since Python 3.12. Scoped to the class
+# rather than declared as a module-level TypeVar, so the parameter cannot leak
+# into an unrelated definition further down the file.
 @dataclass(frozen=True)
-class CachedValue(Generic[T]):
+class CachedValue[T]:
     value: T
     stored_at: float
     ttl: float

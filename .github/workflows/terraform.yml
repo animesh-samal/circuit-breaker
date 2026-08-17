@@ -1,0 +1,65 @@
+# Terraform checks.
+#
+# Formatting and validation only. Both run with `-backend=false`, so this
+# workflow needs no AWS credentials at all -- and a workflow that needs no
+# credentials cannot leak any.
+#
+# `plan` is deliberately not here. A plan must read every resource in the
+# account and write a lock object to the state bucket, which means a role far
+# broader than the deploy role and different from it in kind. Bolting those
+# permissions onto the deploy role to get a nicer PR comment would be a poor
+# trade. The correct version is a separate read-only plan role -- a good
+# follow-up, not a thing to fake now.
+#
+# `apply` stays manual. Auto-apply on merge is defensible for a team with real
+# review discipline; for a single maintainer it means a typo reaches production
+# with nobody having read the diff.
+
+name: Terraform
+
+on:
+  pull_request:
+    paths: ["terraform/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["terraform/**"]
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TF_VERSION: "1.10.5"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      # Recursive: formatting drift inside a module is still drift.
+      - name: Format
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      # -backend=false downloads providers and resolves modules without ever
+      # contacting S3, which is what keeps this credential-free.
+      - name: Validate prod
+        working-directory: terraform/envs/prod
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+      - name: Validate bootstrap
+        working-directory: terraform/bootstrap
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate

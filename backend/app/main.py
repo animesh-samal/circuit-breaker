@@ -31,7 +31,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         level=settings.log_level,
         format='{"ts":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","msg":"%(message)s"}',
     )
-    logger.info("starting %s sha=%s env=%s", settings.app_name, settings.git_sha, settings.environment)
+    logger.info(
+        "starting %s sha=%s env=%s", settings.app_name, settings.git_sha, settings.environment
+    )
 
     state.startup_complete = True
     yield

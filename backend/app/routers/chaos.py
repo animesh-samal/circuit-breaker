@@ -29,7 +29,7 @@ import time
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from app.clients.k8s import KubernetesUnavailable, k8s
+from app.clients.k8s import KubernetesUnavailableError, k8s
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ async def kill_pod() -> ChaosResponse:
 
     try:
         snapshot = await k8s.snapshot()
-    except KubernetesUnavailable as exc:
+    except KubernetesUnavailableError as exc:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc
 
     # Only target the API deployment. Killing the web pod would blank the page
@@ -82,14 +82,17 @@ async def kill_pod() -> ChaosResponse:
     if len(candidates) < settings.chaos_min_replicas:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
-            f"refusing: only {len(candidates)} ready pod(s), minimum is {settings.chaos_min_replicas}",
+            f"refusing: only {len(candidates)} ready pod(s), "
+            f"minimum is {settings.chaos_min_replicas}",
         )
 
-    victim = random.choice(candidates)
+    # S311: not a cryptographic decision. Picking which healthy pod to delete
+    # for a demonstration needs to be arbitrary, not unpredictable.
+    victim = random.choice(candidates)  # noqa: S311
 
     try:
         await k8s.delete_pod(victim.name)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception("chaos deletion failed")
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"deletion failed: {exc}") from exc
 

@@ -70,8 +70,8 @@ class ClusterSnapshot:
     observed_at: str
 
 
-class KubernetesUnavailable(RuntimeError):
-    pass
+class KubernetesUnavailableError(RuntimeError):
+    """Raised when no usable cluster configuration can be found."""
 
 
 class K8sClient:
@@ -100,7 +100,7 @@ class K8sClient:
                 config.load_kube_config()
                 logger.info("kubernetes: local kubeconfig loaded")
             except Exception as exc:
-                raise KubernetesUnavailable(f"no usable kubernetes config: {exc}") from exc
+                raise KubernetesUnavailableError(f"no usable kubernetes config: {exc}") from exc
 
         self._core = client.CoreV1Api()
         self._apps = client.AppsV1Api()
@@ -155,7 +155,11 @@ class K8sClient:
                 ready=int(d.status.ready_replicas or 0),
                 available=int(d.status.available_replicas or 0),
                 updated=int(d.status.updated_replicas or 0),
-                image=(d.spec.template.spec.containers[0].image if d.spec.template.spec.containers else None),
+                image=(
+                    d.spec.template.spec.containers[0].image
+                    if d.spec.template.spec.containers
+                    else None
+                ),
             )
             for d in self._apps.list_namespaced_deployment(namespace).items
         ]
@@ -182,7 +186,9 @@ class K8sClient:
 def _pod_ready(pod: Any) -> bool:
     for cond in pod.status.conditions or []:
         if cond.type == "Ready":
-            return cond.status == "True"
+            # Explicit bool(): the SDK object is untyped, so the comparison
+            # returns Any and would silently widen this function's return type.
+            return bool(cond.status == "True")
     return False
 
 

@@ -174,7 +174,7 @@ class AwsClients:
                 Namespace="CircuitBreaker",
                 MetricData=[{"MetricName": name, "Value": value, "Unit": unit}],
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.debug("metric publish failed for %s: %s", name, exc)
 
     # -- Cost Explorer -----------------------------------------------------

@@ -28,6 +28,7 @@ dependencies = [
 dev = [
     "pytest>=8.3",
     "pytest-cov>=6.0",
+    "pytest-asyncio>=0.24",
     "httpx>=0.27",
     "ruff>=0.7",
     "mypy>=1.13",
@@ -39,16 +40,51 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "S", "C4", "SIM", "RUF"]
-ignore = ["S101"]
+ignore = [
+    # assert is how pytest works
+    "S101",
+    # B008 forbids function calls in argument defaults. That is exactly how
+    # FastAPI declares dependencies -- `Depends(get_settings)` in a default is
+    # the framework's core idiom, not an accident. The rule predates it.
+    "B008",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S"]
+# Fixture generation. S311 is correct that `random` is not cryptographically
+# secure, and irrelevant to inventing plausible pod names.
+"app/clients/mock.py" = ["S311"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 warn_unreachable = true
 
+# Neither SDK ships type information. The alternatives are boto3-stubs (a large
+# dependency that generates types for every AWS service to type three calls) or
+# writing our own stubs. Silencing the import while keeping strict mode over our
+# own code is the proportionate choice -- and the boundary is narrow because
+# every SDK object is already handled as Any inside the client modules.
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*", "kubernetes.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --cov=app --cov-report=term-missing --cov-fail-under=80"
+# Async tests are collected without needing a decorator on every one of them.
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+# The client modules are thin wrappers over the AWS and Kubernetes SDKs. Unit
+# testing them means asserting that a mock was called with the arguments we just
+# passed it, which tests the mock rather than the code. Their correctness is
+# established by running against the real services, not by coverage percentage.
+#
+# What is measured is the code with actual decisions in it: the breaker, the
+# cache, the degradation policy, the routers. The gate is meaningful over that.
+omit = [
+    "app/clients/aws.py",
+    "app/clients/k8s.py",
+    "app/clients/mock.py",
+]

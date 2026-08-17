@@ -26,18 +26,15 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
 
 from app.core.breaker import BreakerOpenError, BreakerState, registry
 from app.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
-
 
 @dataclass
-class Result(Generic[T]):
+class Result[T]:
     """A value plus the story of how it was obtained."""
 
     value: T
@@ -48,7 +45,7 @@ class Result(Generic[T]):
     error: str | None = None
 
 
-async def resilient_fetch(
+async def resilient_fetch[T](
     name: str,
     fetch: Callable[[], Awaitable[T]],
     ttl: float,
@@ -90,7 +87,7 @@ async def resilient_fetch(
     # 3. Call it.
     try:
         value = await breaker.call(fetch)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         if entry is not None:
             logger.warning("%s failed, serving stale (age %.0fs): %s", name, entry.age_seconds, exc)
             return Result(
