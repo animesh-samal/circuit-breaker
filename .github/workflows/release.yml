@@ -137,12 +137,17 @@ jobs:
           REGISTRY="${{ steps.ecr.outputs.registry }}"
           REPO_URL="https://github.com/${GITHUB_REPOSITORY}.git"
 
+          # Note `set -eu` rather than `set -euo pipefail` below.
+          # AWS-RunShellScript executes with /bin/sh, which is dash on Ubuntu,
+          # and pipefail is a bashism dash does not implement. The deploy script
+          # itself has a bash shebang and keeps the stricter setting; only this
+          # wrapper has to be POSIX.
           CMD_ID=$(aws ssm send-command \
             --instance-ids "${{ steps.node.outputs.id }}" \
             --document-name AWS-RunShellScript \
             --comment "release ${TAG}" \
             --parameters "commands=[
-              'set -euo pipefail',
+              'set -eu',
               'if [ ! -d /opt/${PROJECT}/.git ]; then git clone -q ${REPO_URL} /opt/${PROJECT}; fi',
               'cd /opt/${PROJECT}',
               'git fetch -q --all --tags --prune',
