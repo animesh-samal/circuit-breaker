@@ -146,20 +146,43 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
 
-      - name: Scan API image
-        if: needs.changes.outputs.backend == 'true'
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: circuit-breaker/api:ci
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true # a CVE with no available fix is noise, not a gate
-          exit-code: "1"
+      # Trivy runs from its official image rather than the marketplace action.
+      # Two reasons:
+      #
+      #   1. One fewer third-party action in the supply chain. An action runs
+      #      arbitrary code with the workflow's token; the image only reads a
+      #      tarball we hand it.
+      #   2. The action's release tags move around and pinning them is a
+      #      recurring source of "unable to resolve action" failures.
+      #
+      # Images are exported with `docker save` and scanned via --input, so the
+      # Docker socket is never mounted into the scanner. Handing the socket to a
+      # container is equivalent to giving it root on the host, and there is no
+      # reason a vulnerability scanner needs that.
+      #
+      # The scanner itself is deliberately unpinned. Pinning is usually correct,
+      # but a scanner's value is entirely in being current -- last year's
+      # scanner with last year's database finds last year's vulnerabilities.
+      - name: Scan images
+        if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/scan
 
-      - name: Scan web image
-        if: needs.changes.outputs.frontend == 'true'
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: circuit-breaker/web:ci
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: "1"
+          scan() {
+            local image="$1" name="$2"
+            docker save "$image" -o "/tmp/scan/${name}.tar"
+            docker run --rm -v /tmp/scan:/scan aquasec/trivy:latest image \
+              --input "/scan/${name}.tar" \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed \
+              --exit-code 1 \
+              --no-progress
+          }
+
+          if [ "${{ needs.changes.outputs.backend }}" = "true" ]; then
+            scan circuit-breaker/api:ci api
+          fi
+          if [ "${{ needs.changes.outputs.frontend }}" = "true" ]; then
+            scan circuit-breaker/web:ci web
+          fi
