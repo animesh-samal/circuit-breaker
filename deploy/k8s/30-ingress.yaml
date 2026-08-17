@@ -25,9 +25,11 @@ metadata:
   name: circuit-breaker
   namespace: circuit-breaker
   annotations:
-    # Switch to letsencrypt-prod once a staging certificate has been issued
-    # successfully. See 40-issuers.yaml for why staging comes first.
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    # Production. Staging issued successfully first, which is the point of
+    # having both: it proved the HTTP-01 challenge path works without spending
+    # production rate limit, and production allows only 5 failed validations per
+    # hostname per hour. See 40-issuers.yaml.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
     traefik.ingress.kubernetes.io/router.middlewares: circuit-breaker-redirect-https@kubernetescrd
