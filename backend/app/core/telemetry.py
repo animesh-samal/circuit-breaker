@@ -13,9 +13,9 @@ compute percentiles when it receives the distribution. A sum-and-count gives you
 an average, and an average latency hides exactly the tail you care about.
 
 Buckets are 5ms wide and capped at 150 distinct values, which is CloudWatch's
-per-datum limit. At 5ms granularity that covers 0–750ms; anything slower lands
-in the top bucket, which is fine, because by then the number you need is "some
-requests are very slow", not its third significant figure.
+per-datum limit. At 5ms granularity that covers 0 to 750ms; anything slower
+lands in the top bucket, which is fine, because by then the number you need is
+"some requests are very slow", not its third significant figure.
 """
 
 from __future__ import annotations

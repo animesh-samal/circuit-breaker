@@ -1,6 +1,7 @@
 """Application entrypoint."""
 
 import asyncio
+import contextlib
 import logging
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -40,7 +41,7 @@ async def _flush_metrics() -> None:
                 await aws.publish_window(window.requests, window.errors, window.latency_buckets)
         except asyncio.CancelledError:
             raise
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.exception("metric flush loop error")
 
 
@@ -70,15 +71,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         # of grace; spending some of it on the last window means the final
         # minute of traffic before a deploy is not silently discarded.
         task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await task
-        except asyncio.CancelledError:
-            pass
+
         try:
             window = await buffer.drain()
             if window is not None:
                 await aws.publish_window(window.requests, window.errors, window.latency_buckets)
-        except Exception:  # noqa: BLE001
+        except Exception:
             logger.warning("final metric flush failed")
 
     logger.info("shutdown complete")

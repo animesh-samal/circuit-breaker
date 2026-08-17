@@ -222,12 +222,26 @@ async def test_registry_isolates_breakers() -> None:
 
 
 async def test_concurrent_failures_do_not_double_count() -> None:
-    """The lock exists for this. Ten simultaneous failures against a threshold
-    of three should open the breaker, not corrupt the counter."""
+    """The lock exists for this.
+
+    Ten simultaneous calls against a threshold of three: the first few reach the
+    upstream and fail, the breaker opens, and the rest are rejected without
+    being called. The exact split depends on task scheduling and is not worth
+    asserting -- what must hold is that every call is accounted for exactly
+    once, with no lost or double counts from concurrent access.
+    """
     b = CircuitBreaker(name="t", failure_threshold=3)
 
     results = await asyncio.gather(*(b.call(boom) for _ in range(10)), return_exceptions=True)
+    stats = b.stats()
 
     assert all(isinstance(r, Exception) for r in results)
     assert b.state is BreakerState.OPEN
-    assert b.stats().total_failures == 10
+
+    # Every call landed in exactly one bucket.
+    assert stats.total_failures + stats.total_rejections == 10
+
+    # At least the threshold reached the upstream, or the breaker could not
+    # have opened; and not every call did, or it never protected anything.
+    assert stats.total_failures >= 3
+    assert stats.total_rejections >= 1

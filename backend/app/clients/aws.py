@@ -213,7 +213,7 @@ class AwsClients:
                 MetricData=data,
             )
             logger.debug("published %d requests, %d errors", requests, errors)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             # Telemetry is not worth an outage. Log and move on; the next flush
             # will carry the next window.
             logger.warning("metric flush failed: %s", exc)
