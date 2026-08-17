@@ -56,6 +56,27 @@ jobs:
           fi
           echo "Deploy role: ${{ vars.AWS_DEPLOY_ROLE }}"
 
+      # Temporary diagnostic. Prints the claims GitHub is actually sending, so
+      # the trust policy can be compared against reality rather than against
+      # what the documentation implies.
+      #
+      # It decodes and prints only the claims -- never the token itself. The
+      # claims are public metadata; the token is a bearer credential and would
+      # be a genuine leak if it appeared in a log.
+      - name: Show OIDC claims
+        run: |
+          TOKEN=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
+
+          # A JWT is three base64url segments separated by dots; the middle one
+          # is the payload. Padding is added because base64url omits it.
+          PAYLOAD=$(echo "$TOKEN" | cut -d. -f2)
+          PAYLOAD="${PAYLOAD}$(printf '=%.0s' $(seq $(( (4 - ${#PAYLOAD} % 4) % 4 ))))"
+
+          echo "$PAYLOAD" | tr '_-' '/+' | base64 -d 2>/dev/null \
+            | jq '{sub, aud, repository, repository_owner, ref, environment}'
+
       - name: Assume AWS role
         uses: aws-actions/configure-aws-credentials@v4
         with:
