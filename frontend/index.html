@@ -17,6 +17,18 @@
     />
     <meta property="og:type" content="website" />
 
+    <!-- Icons. Order matters: browsers take the last format they understand,
+         so the .ico goes first as the fallback and the SVG wins on anything
+         modern. The SVG also scales cleanly to whatever size the OS asks for,
+         which the raster versions cannot.
+         Without these, a request for /favicon.ico hits nginx's SPA fallback and
+         gets index.html back with a 200 -- the browser then tries to parse HTML
+         as an image and shows nothing. -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#14100D" />
+
     <!-- preconnect shaves a round trip off first paint; fonts are otherwise
          discovered only after the CSS parses -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

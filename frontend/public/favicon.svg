@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Circuit Breaker">
+  <title>Circuit Breaker</title>
+
+  <!-- Warm near-black, matching the site's default theme. -->
+  <rect width="64" height="64" rx="14" fill="#14100D"/>
+
+  <!-- A circuit breaker in the open position: current arrives at the left
+       contact, the lever has thrown, and the circuit is broken.
+       Stroke weights are deliberately heavy. A favicon is displayed at 16px far
+       more often than at any size where finesse would show, and thin strokes
+       simply disappear at that scale. -->
+  <g stroke="#C9A227" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M6 42 H18"/>
+    <path d="M46 42 H58"/>
+    <path d="M18 42 L44 22"/>
+  </g>
+
+  <!-- Contacts. The right one is green: the circuit downstream is healthy,
+       which is what a tripped breaker exists to protect. -->
+  <circle cx="18" cy="42" r="6" fill="#C9A227"/>
+  <circle cx="46" cy="42" r="6" fill="#4FB286"/>
+</svg>
