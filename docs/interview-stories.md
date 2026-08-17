@@ -51,7 +51,54 @@ it against what the server expects. Works for any auth failure.
 
 ---
 
-## 2. Sizing a node from evidence rather than the free-tier page
+## 2. Three rounds of Kubernetes debugging for a typo in a DNS record
+
+**Question it answers:** *Tell me about a time you were looking in the wrong
+place.* · *How do you isolate a failure across layers?*
+
+TLS certificates wouldn't issue. cert-manager reported
+`wrong status code '404', expected '200'` on the HTTP-01 challenge.
+
+I went down the Kubernetes stack: solver ingresses existed, solver pods were
+running, the issuers were ready, the CRD chain — Certificate, CertificateRequest,
+Order, Challenge — had all been created correctly. I started reasoning about
+Traefik routing priority and whether the HTTPS redirect middleware I'd added was
+swallowing the `.well-known` path.
+
+Then I actually read the whole response instead of the status line:
+
+```
+HTTP/1.1 404 NOT FOUND
+Server: nginx/1.18.0 (Ubuntu)
+```
+
+**That isn't our nginx.** Ours is `nginx:1.27-alpine`, which reports `1.27.x` and
+never says `(Ubuntu)`. Something else entirely was answering.
+
+```
+dig +short animesh.space
+3.111.20.165      ← what DNS returned
+3.111.200.165     ← the actual node
+```
+
+A missing zero in the A record. `3.111.20.165` is a stranger's server, and
+Let's Encrypt had been faithfully fetching the challenge token from it.
+
+Two things made the diagnosis conclusive once I stopped guessing. `curl --resolve
+animesh.space:80:3.111.200.165` tests the hostname against a specific IP,
+bypassing DNS entirely — it returned the correct key authorization, proving the
+cluster was right all along. And `dig` versus `dig @8.8.8.8` disagreed, which
+identified the remaining delay as resolver caching rather than a wrong record.
+
+**Generalises to:** when a response is wrong, establish *which machine answered*
+before theorising about why. A `Server` header, an unexpected TLS certificate, a
+response time that's too fast — those identify the responder. I spent two rounds
+reasoning about ingress priority on the strength of a status code alone, while
+the answer sat in a header I'd read past.
+
+---
+
+## 3. Sizing a node from evidence rather than the free-tier page
 
 **Question it answers:** *How do you right-size infrastructure?* · *Tell me about
 a decision you changed.*
@@ -84,7 +131,7 @@ signal.
 
 ---
 
-## 3. The monitoring API that would have been the largest line on the bill
+## 4. The monitoring API that would have been the largest line on the bill
 
 **Question it answers:** *Tell me about a cost decision.* · *How do you decide a
 cache TTL?*
@@ -109,7 +156,7 @@ There's a test asserting a fresh cache hit does not call the upstream. If someon
 
 ---
 
-## 4. A test that failed for reasons that had nothing to do with the code
+## 5. A test that failed for reasons that had nothing to do with the code
 
 **Question it answers:** *How do you test time-dependent logic?* · *Tell me about
 a flaky test.*
@@ -141,7 +188,7 @@ future.
 
 ---
 
-## 5. A dependency mismatch that hung instead of failing
+## 6. A dependency mismatch that hung instead of failing
 
 **Question it answers:** *Why containers?* · *Tell me about a time you lost time
 to tooling.*
@@ -164,7 +211,7 @@ It's also the honest answer to "why containers?" — better than anything abstra
 
 ---
 
-## 6. Type errors the dev server could never have caught
+## 7. Type errors the dev server could never have caught
 
 **Question it answers:** *What does CI give you that local development doesn't?*
 
@@ -185,7 +232,7 @@ present and `undefined`", and `noUncheckedIndexedAccess` makes `arr[i]` return
 
 ---
 
-## 7. Changing the machine's definition instead of the machine
+## 8. Changing the machine's definition instead of the machine
 
 **Question it answers:** *What does infrastructure as code actually buy you?*
 
@@ -207,7 +254,7 @@ drift.
 
 ---
 
-## 8. Reading the step list instead of the error message
+## 9. Reading the step list instead of the error message
 
 **Question it answers:** *How do you approach a failing pipeline?*
 
@@ -223,7 +270,7 @@ credentials to record with, turning one clear failure into two confusing ones.
 
 ---
 
-## 9. Choosing what not to test
+## 10. Choosing what not to test
 
 **Question it answers:** *What's your view on code coverage?*
 
