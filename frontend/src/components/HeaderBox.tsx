@@ -6,7 +6,7 @@ import { THEMES, type ThemeId } from "../lib/useTheme";
 
 const SOCIALS: Array<[string, string]> = [
   ["GitHub", "https://github.com/animesh-samal"],
-  ["LinkedIn", "https://linkedin.com/in/animesh-samal"],
+  ["LinkedIn", "https://www.linkedin.com/in/animesh-samal-a63366b9/"],
   ["Email", "mailto:animesh7667@gmail.com"],
 ];
 

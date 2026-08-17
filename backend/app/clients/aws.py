@@ -177,6 +177,47 @@ class AwsClients:
         except Exception as exc:
             logger.debug("metric publish failed for %s: %s", name, exc)
 
+    async def publish_window(self, requests: int, errors: int, buckets: dict[float, int]) -> None:
+        """Publish one flush interval as three metrics in a single API call.
+
+        Latency goes as Values/Counts rather than a Value or a StatisticSet.
+        CloudWatch can only compute percentiles from a distribution -- send it a
+        sum and a count and the best you can ever ask for afterwards is an
+        average, which is precisely the statistic that hides a bad tail.
+
+        No pod dimension is set, deliberately. Without one CloudWatch aggregates
+        across every replica, which is the number that means something. Adding
+        a pod dimension would multiply the metric count (and the bill) by the
+        replica count to answer a question nobody asks.
+        """
+        data: list[dict[str, Any]] = [
+            {"MetricName": "RequestCount", "Value": float(requests), "Unit": "Count"},
+            {"MetricName": "ErrorCount", "Value": float(errors), "Unit": "Count"},
+        ]
+
+        if buckets:
+            ordered = sorted(buckets.items())
+            data.append(
+                {
+                    "MetricName": "RequestLatencyMs",
+                    "Values": [v for v, _ in ordered],
+                    "Counts": [float(c) for _, c in ordered],
+                    "Unit": "Milliseconds",
+                }
+            )
+
+        try:
+            await asyncio.to_thread(
+                self.cloudwatch.put_metric_data,
+                Namespace="CircuitBreaker",
+                MetricData=data,
+            )
+            logger.debug("published %d requests, %d errors", requests, errors)
+        except Exception as exc:  # noqa: BLE001
+            # Telemetry is not worth an outage. Log and move on; the next flush
+            # will carry the next window.
+            logger.warning("metric flush failed: %s", exc)
+
     # -- Cost Explorer -----------------------------------------------------
 
     async def fetch_cost(self) -> CostBreakdown:

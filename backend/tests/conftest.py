@@ -13,6 +13,7 @@ import pytest
 from app.core.breaker import registry
 from app.core.cache import cache
 from app.core.state import state
+from app.core.telemetry import Window, buffer
 
 
 @pytest.fixture(autouse=True)
@@ -23,3 +24,4 @@ def clean_globals() -> Iterator[None]:
     cache._entries.clear()
     state.checks.clear()
     state.shutting_down = False
+    buffer._window = Window()

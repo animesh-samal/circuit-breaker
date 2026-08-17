@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     deploys_ttl: float = 300.0
     cost_ttl: float = 86_400.0
 
+    # Request metrics are buffered and flushed on this interval rather than
+    # published per request. See core/telemetry.py for why.
+    metrics_flush_seconds: float = 60.0
+
     # Local development without a cluster or AWS account. Must stay false in
     # any deployed environment -- guarded explicitly so mock data can never be
     # mistaken for real telemetry.

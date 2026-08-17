@@ -1,6 +1,10 @@
 const LINKS: Array<[string, string, string]> = [
   ["Email", "animesh7667@gmail.com", "mailto:animesh7667@gmail.com"],
-  ["LinkedIn", "linkedin.com/in/animesh-samal", "https://linkedin.com/in/animesh-samal"],
+  [
+    "LinkedIn",
+    "linkedin.com/in/animesh-samal-a63366b9",
+    "https://www.linkedin.com/in/animesh-samal-a63366b9/",
+  ],
   ["GitHub", "github.com/animesh-samal", "https://github.com/animesh-samal"],
 ];
 
