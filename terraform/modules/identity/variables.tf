@@ -13,6 +13,25 @@ variable "github_repository" {
   }
 }
 
+variable "github_owner_id" {
+  description = <<-EOT
+    Numeric GitHub account ID, from the `sub` claim or
+    `curl https://api.github.com/users/<owner> | jq .id`. Null wildcards it,
+    which works but weakens the trust to a name match.
+  EOT
+  type        = string
+  default     = null
+}
+
+variable "github_repository_id" {
+  description = <<-EOT
+    Numeric repository ID, from the `sub` claim or
+    `curl https://api.github.com/repos/<owner>/<repo> | jq .id`.
+  EOT
+  type        = string
+  default     = null
+}
+
 variable "create_oidc_provider" {
   description = <<-EOT
     An AWS account may hold only one OIDC provider per URL. Set false if

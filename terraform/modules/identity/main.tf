@@ -28,6 +28,15 @@ resource "aws_iam_openid_connect_provider" "github" {
 
 locals {
   provider_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : data.aws_iam_openid_connect_provider.github[0].arn
+
+  repo_owner = split("/", var.github_repository)[0]
+  repo_name  = split("/", var.github_repository)[1]
+
+  # Wildcarding the IDs would reinstate the weakness the immutable format
+  # exists to remove: names can be released and re-registered, IDs cannot.
+  # Pinning them is strictly better and costs one lookup.
+  owner_id = coalesce(var.github_owner_id, "*")
+  repo_id  = coalesce(var.github_repository_id, "*")
 }
 
 data "aws_iam_policy_document" "assume" {
@@ -48,10 +57,28 @@ data "aws_iam_policy_document" "assume" {
     # The critical condition. Without a `sub` restriction, ANY repository on
     # GitHub could assume this role -- the trust would be in GitHub as a whole
     # rather than in your repository. Scope it as tightly as the workflow allows.
+    #
+    # Two patterns, because GitHub emits two subject formats:
+    #
+    #   legacy     repo:owner/repo:environment:production
+    #   immutable  repo:owner@1234567/repo@7654321:environment:production
+    #
+    # The immutable form embeds the numeric account and repository IDs. It exists
+    # to close a real hole in the legacy format: names can be released and
+    # re-registered, so a deleted repository or a renamed organisation could let
+    # somebody else claim the name and inherit this trust. Numeric IDs are never
+    # reused, so the trust follows the actual repository rather than its label.
+    #
+    # Nearly every published example still shows only the legacy pattern, which
+    # makes the resulting AccessDenied genuinely hard to diagnose -- STS will not
+    # say which condition failed, by design.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:*"]
+      values = [
+        "repo:${var.github_repository}:*",
+        "repo:${local.repo_owner}@${local.owner_id}/${local.repo_name}@${local.repo_id}:*",
+      ]
     }
   }
 }

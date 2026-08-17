@@ -30,6 +30,18 @@ variable "github_repository" {
   type        = string
 }
 
+variable "github_owner_id" {
+  description = "Numeric GitHub account ID. Pins the OIDC trust to the account, not its name."
+  type        = string
+  default     = null
+}
+
+variable "github_repository_id" {
+  description = "Numeric GitHub repository ID. Pins the trust to the repository, not its name."
+  type        = string
+  default     = null
+}
+
 variable "create_oidc_provider" {
   description = "False if GitHub's OIDC provider already exists in this account."
   type        = bool

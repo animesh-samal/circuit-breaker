@@ -86,6 +86,8 @@ module "identity" {
   project              = var.project
   region               = var.region
   github_repository    = var.github_repository
+  github_owner_id      = var.github_owner_id
+  github_repository_id = var.github_repository_id
   ecr_repository_arns  = module.registry.repository_arns
   dynamodb_table_arns  = module.data.table_arns
   create_oidc_provider = var.create_oidc_provider
