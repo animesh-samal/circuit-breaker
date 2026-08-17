@@ -19,6 +19,6 @@ variable "create_oidc_provider" {
     GitHub's provider already exists in this account from another project --
     otherwise the apply fails with EntityAlreadyExists.
   EOT
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
 }

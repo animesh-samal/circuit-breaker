@@ -21,7 +21,7 @@ resource "aws_cloudwatch_metric_alarm" "node_cpu" {
   # A t3.micro is burstable. Sustained high CPU exhausts its credit balance and
   # the instance is throttled hard -- so this alarm is about credit exhaustion,
   # not the CPU number itself.
-  alarm_description = "Sustained CPU on a burstable instance; check credit balance."
+  alarm_description  = "Sustained CPU on a burstable instance; check credit balance."
   treat_missing_data = "notBreaching"
 }
 
@@ -51,10 +51,10 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type = "metric", x = 0, y = 0, width = 12, height = 6
         properties = {
-          title  = "Node CPU"
-          region = var.region
+          title   = "Node CPU"
+          region  = var.region
           metrics = [["AWS/EC2", "CPUUtilization", "InstanceId", var.instance_id]]
-          period = 300
+          period  = 300
         }
       },
       {
@@ -72,10 +72,10 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type = "metric", x = 0, y = 6, width = 12, height = 6
         properties = {
-          title  = "p95 latency"
-          region = var.region
+          title   = "p95 latency"
+          region  = var.region
           metrics = [["CircuitBreaker", "RequestLatencyMs", { stat = "p95" }]]
-          period = 300
+          period  = 300
         }
       },
     ]

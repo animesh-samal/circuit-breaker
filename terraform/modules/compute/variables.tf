@@ -14,8 +14,8 @@ variable "instance_type" {
     system pods running, coredns restarting under pressure, and the Traefik
     install needing four attempts.
   EOT
-  type    = string
-  default = "t3.small"
+  type        = string
+  default     = "t3.small"
 }
 
 variable "disk_gb" {

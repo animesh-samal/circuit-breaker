@@ -47,8 +47,8 @@ variable "monthly_budget_usd" {
     "something is wrong", not "the project is running". An alarm that fires
     every month is an alarm you stop reading.
   EOT
-  type    = string
-  default = "15"
+  type        = string
+  default     = "15"
 }
 
 variable "alert_email" {

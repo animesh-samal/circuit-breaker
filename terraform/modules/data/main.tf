@@ -7,8 +7,8 @@
 # nothing, while the "simpler" on-demand choice would appear on every invoice.
 
 resource "aws_dynamodb_table" "deploys" {
-  name         = "${var.project}-deploys"
-  billing_mode = "PROVISIONED"
+  name           = "${var.project}-deploys"
+  billing_mode   = "PROVISIONED"
   read_capacity  = 5
   write_capacity = 5
 
@@ -37,8 +37,8 @@ resource "aws_dynamodb_table" "deploys" {
 }
 
 resource "aws_dynamodb_table" "cache" {
-  name         = "${var.project}-cache"
-  billing_mode = "PROVISIONED"
+  name           = "${var.project}-cache"
+  billing_mode   = "PROVISIONED"
   read_capacity  = 5
   write_capacity = 5
 
