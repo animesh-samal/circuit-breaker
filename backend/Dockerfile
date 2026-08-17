@@ -29,7 +29,19 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY pyproject.toml ./
 COPY app ./app
 
-RUN pip install --upgrade pip && pip install .
+RUN pip install --upgrade pip setuptools wheel && pip install .
+
+# Remove pip from the virtualenv once installation is done.
+#
+# Two reasons. It vendors its own dependency tree -- msgpack, urllib3, requests
+# and a dozen others -- which the scanner reports as vulnerabilities in an image
+# that never runs pip. And an attacker who achieves code execution here would
+# otherwise find a working package installer ready to fetch a payload.
+#
+# setuptools stays, upgraded to a patched version rather than removed: some
+# libraries still import pkg_resources at runtime, and a crash-on-import is a
+# worse outcome than a scanner finding in a package we have already patched.
+RUN pip uninstall -y pip wheel
 
 # ---------------------------------------------------------------------------
 # Stage 2: runtime
@@ -38,6 +50,21 @@ RUN pip install --upgrade pip && pip install .
 # application. Nothing else.
 # ---------------------------------------------------------------------------
 FROM python:3.12-slim AS runtime
+
+# Patch OS packages, then remove the interpreter's own package tooling.
+#
+# The base image lags Debian's security updates by however long it has been
+# since it was rebuilt, so a scan finds fixed CVEs that simply have not reached
+# the tag yet. Upgrading at build time closes that window. The alternative --
+# waiting for a fresh base image -- means shipping known-vulnerable packages for
+# an unbounded period.
+#
+# --no-install-recommends keeps the upgrade from dragging in extras, and the
+# apt lists are removed in the same layer so they never enter the image.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip uninstall -y pip setuptools wheel
 
 # Build provenance, injected by CI. Baked in at build time rather than read from
 # git at runtime: the image has no git binary and no .git directory, and an
