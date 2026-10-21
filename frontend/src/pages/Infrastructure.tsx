@@ -1,5 +1,6 @@
 import { api } from "../lib/api";
 import { usePolling } from "../lib/usePolling";
+import { PageHead } from "../components/SectionHead";
 import ChaosButton from "../components/infra/ChaosButton";
 import PodCube from "../components/infra/PodCube";
 import Provenance from "../components/infra/Provenance";
@@ -45,13 +46,18 @@ export default function Infrastructure() {
   const pods = snapshot?.pods ?? [];
 
   return (
-    <div>
-      <h1>Infrastructure</h1>
-      <p className="prose" style={{ marginBottom: "2rem" }}>
-        Everything below is read from the running system when you load this page
-        &mdash; the Kubernetes API for pods, CloudWatch for metrics, Cost
-        Explorer for spend. Nothing here is a screenshot.
-      </p>
+    <div className="container page">
+      <PageHead
+        eyebrow="Live console"
+        title="Infrastructure"
+        lead={
+          <>
+            Everything below is read from the running system when you load this
+            page &mdash; the Kubernetes API for pods, CloudWatch for metrics, Cost
+            Explorer for spend. Nothing here is a screenshot.
+          </>
+        }
+      />
 
       {/* ---- cluster ---- */}
       <Section title="Cluster" aside={<Provenance env={cluster.data} />}>
