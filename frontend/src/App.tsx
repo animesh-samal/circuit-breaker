@@ -1,14 +1,12 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
+import Footer from "./components/Footer";
 import GhibliScene from "./components/GhibliScene";
-import HeaderBox from "./components/HeaderBox";
-import Sidebar from "./components/Sidebar";
-import StatusBar from "./components/StatusBar";
-import About from "./pages/About";
+import Nav from "./components/Nav";
+import ScrollManager from "./components/ScrollManager";
+import { SystemStatusProvider } from "./lib/systemStatus";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
-import Contact from "./pages/Contact";
-import Experience from "./pages/Experience";
 import Home from "./pages/Home";
 import Infrastructure from "./pages/Infrastructure";
 import NotFound from "./pages/NotFound";
@@ -19,7 +17,7 @@ export default function App() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <>
+    <SystemStatusProvider>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -28,29 +26,27 @@ export default function App() {
           scene's DOM nodes or its animations. */}
       {theme === "ghibli" && <GhibliScene />}
 
-      <div className="page-wrap">
-        <HeaderBox theme={theme} setTheme={setTheme} />
+      <ScrollManager />
+      <Nav theme={theme} setTheme={setTheme} />
 
-        <div className="shell">
-          <Sidebar />
+      <main id="main" tabIndex={-1}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          {/* These were pages before the home page became one long scroll.
+              Redirected rather than dropped, so links already shared or saved
+              still land on the right section. */}
+          <Route path="/about" element={<Navigate to="/#about" replace />} />
+          <Route path="/experience" element={<Navigate to="/#experience" replace />} />
+          <Route path="/contact" element={<Navigate to="/#contact" replace />} />
+          <Route path="/infrastructure" element={<Infrastructure />} />
+          <Route path="/terminal" element={<Terminal />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
 
-          <main id="main" className="page">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/experience" element={<Experience />} />
-              <Route path="/infrastructure" element={<Infrastructure />} />
-              <Route path="/terminal" element={<Terminal />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
-
-      <StatusBar />
-    </>
+      <Footer />
+    </SystemStatusProvider>
   );
 }
