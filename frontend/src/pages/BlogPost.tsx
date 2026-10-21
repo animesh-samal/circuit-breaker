@@ -1,13 +1,19 @@
 import { Link, useParams } from "react-router-dom";
 
+import Icon from "../components/Icons";
+import { formatDate } from "../components/PostCard";
+import { PageHead } from "../components/SectionHead";
 import { getPost } from "../content/posts";
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+function BackLink() {
+  return (
+    <Link to="/blog" className="text-link back-link">
+      <span className="flip" aria-hidden="true">
+        <Icon name="arrow-right" size={14} />
+      </span>
+      All writing
+    </Link>
+  );
 }
 
 export default function BlogPost() {
@@ -16,47 +22,40 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div style={{ maxWidth: "var(--measure)" }}>
-        <h1 style={{ marginBottom: "1rem" }}>No such post</h1>
-        <p className="prose">That article does not exist, or it has been renamed.</p>
-        <Link to="/blog" className="mono" style={{ fontSize: "0.8125rem" }}>
-          ← All writing
-        </Link>
+      <div className="container page">
+        <PageHead eyebrow="Writing" title="No such post" lead="That article does not exist, or it has been renamed." />
+        <BackLink />
       </div>
     );
   }
 
   return (
-    <article style={{ maxWidth: "var(--measure)" }}>
-      <Link
-        to="/blog"
-        className="mono"
-        style={{ fontSize: "0.75rem", color: "var(--text-mute)", display: "inline-block", marginBottom: "1.5rem" }}
-      >
-        ← All writing
-      </Link>
+    <article className="container page article">
+      <BackLink />
 
-      <div style={{ display: "flex", gap: "0.9rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
-        <span className="label">{formatDate(post.date)}</span>
-        <span className="label">{post.readingMinutes} min read</span>
-        <span className="label">{post.author}</span>
-      </div>
+      <p className="post-meta">
+        <span>{formatDate(post.date)}</span>
+        <span aria-hidden="true">·</span>
+        <span>{post.readingMinutes} min read</span>
+        <span aria-hidden="true">·</span>
+        <span>{post.author}</span>
+      </p>
 
-      <h1 style={{ marginBottom: "1.75rem" }}>{post.title}</h1>
+      <h1>{post.title}</h1>
 
       {post.body.map((para) => (
-        <p className="prose" key={para.slice(0, 40)} style={{ marginBottom: "1.25rem" }}>
+        <p className="prose" key={para.slice(0, 40)}>
           {para}
         </p>
       ))}
 
-      <div className="chips" style={{ marginTop: "2rem" }}>
+      <ul className="chips chips--sm" aria-label="Tags">
         {post.tags.map((tag) => (
-          <span className="chip" key={tag}>
+          <li className="chip" key={tag}>
             {tag}
-          </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </article>
   );
 }

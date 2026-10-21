@@ -57,9 +57,9 @@ static site). Cost: no SSR, so no server-rendered SEO.
 is a polyline and a fill. Hand-rolled SVG sparklines are ~40 lines. Cost: no
 axes, tooltips, or legends without writing them.
 
-**Hand-rolled icons.** Rejected: lucide-react (~60KB for the seven glyphs used)
-or an icon font (a network request and a FOUT). Seven inline SVGs are about 1KB
-and let the stroke weight be tuned to the type. Cost: adding an eighth is manual.
+**Hand-rolled icons.** Rejected: lucide-react (~60KB for the nine glyphs used)
+or an icon font (a network request and a FOUT). Nine inline SVGs are about 1.5KB
+and let the stroke weight be tuned to the type. Cost: adding a tenth is manual.
 
 **CSS 3D transforms, not Three.js.** For the rotating pod cubes. Rejected: WebGL,
 which would add ~600KB, drain phone batteries, and need a fallback for machines
@@ -68,7 +68,9 @@ on the compositor and inherits theme variables. Cost: no real 3D beyond simple
 solids.
 
 **Theme system as CSS custom properties on `[data-theme]`.** Five themes; a sixth
-is one CSS block and one array entry. Rejected: separate stylesheets per theme
+is one CSS block and one array entry. The redesign renamed the ids (`folio`
+became `warm`, a new navy `dark` became the default), with a small map from the
+old ids so returning visitors are not stuck on a theme that no longer exists. Rejected: separate stylesheets per theme
 (duplicated rules, drift), or a CSS-in-JS runtime. Cost: `color-mix()` is
 required for derived tints — fine in current browsers, not in old ones.
 
@@ -80,20 +82,33 @@ Cost: a small blocking script in `<head>`.
 on request, then reverted after seeing it: centred prose leaves a ragged left
 edge and the eye has to hunt for each line's start. Cost: none.
 
-**Sidebar navigation, becoming a sticky horizontal strip on mobile.** Rejected: a
-bottom tab bar (six items exceed the four-or-five practical limit, and it makes a
-portfolio feel like an app); a hamburger menu (hides navigation behind a tap).
-Same DOM in both layouts, re-flowed by CSS. Cost: one media query.
+**One-page home with a sticky top bar.** Replaced the sidebar and the separate
+About, Experience and Contact pages. Each of those was a few paragraphs behind a
+click; a recruiter now scrolls through all of it instead of guessing which link
+to open. The old routes redirect to their section, so shared links still work.
+The live console and the blog stay separate pages, because they are things to
+visit rather than things to skim. Rejected: keeping the sidebar beside a long
+page (it duplicates the scroll position and eats a column on every screen). On
+phones the links fold behind a menu button, which the sidebar decision had
+rejected; accepted this time because on a one-page site scrolling also reaches
+every section. Cost: navigation is one tap further away on mobile.
+
+**Scroll reveal with threshold 0 and a negative root margin.** A fractional
+threshold is a share of the element's own height, so a block taller than a few
+screens could never reach it and would stay invisible. Each block reveals once
+and is never hidden again. Cost: content is invisible until JavaScript runs,
+which this SPA already requires.
+
+**No contact form.** A form needs somewhere to send to: a mail relay, a third
+party with a key in the page, or a new endpoint with abuse protection. A mailto
+link does the same job with none of that. Cost: no message box on the page.
 
 **Indicator lamps carry real state.** The Infrastructure lamp polls
 `/api/breakers` and shows green, amber or red for actual system health rather
 than merely echoing which page is open. A light meaning "you clicked this" is a
-second highlight; a light meaning "the cluster is degraded" is information.
-
-**Utility box readouts fetched on first expand, not on page load.** Most visitors
-never open it, and `/api/cost` ultimately reaches a billed API. Uses
-`Promise.allSettled`, so one failing endpoint degrades a single field rather than
-blanking the panel.
+second highlight; a light meaning "the cluster is degraded" is information. The
+same reading drives the badge on the hero photo, through one shared poll rather
+than one per component.
 
 **No CORS, anywhere.** The frontend only ever calls relative `/api/...` paths —
 Vite proxies in development, nginx routes in production. The browser never makes
