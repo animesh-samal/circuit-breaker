@@ -28,7 +28,17 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Stage 2: serve
 # ---------------------------------------------------------------------------
-FROM nginx:1.27-alpine AS runtime
+# 1.30 is nginx's current stable line. The 1.27 tag this used to name stopped
+# being rebuilt when that branch ended -- its last build was April 2025, on
+# Alpine 3.21 -- so every library in it stayed at the version it shipped with,
+# and the scan found eighteen months of fixed CVEs.
+FROM nginx:1.30-alpine AS runtime
+
+# Patch OS packages at build time. Even a maintained tag is only rebuilt every
+# few weeks, and in between a scan finds CVEs Alpine has already fixed. Same
+# reasoning as the apt-get upgrade in the backend image. --no-cache keeps the
+# package index out of the layer.
+RUN apk upgrade --no-cache
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/nginx.conf
