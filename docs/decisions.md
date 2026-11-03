@@ -110,6 +110,14 @@ second highlight; a light meaning "the cluster is degraded" is information. The
 same reading drives the badge on the hero photo, through one shared poll rather
 than one per component.
 
+**Journey map drawn as SVG measured from the DOM.** The stops are an ordinary
+ordered list laid out by CSS grid; the road is an SVG drawn through the
+rendered node positions and redrawn by a ResizeObserver. Rejected: a fixed
+SVG with the cards positioned inside it, which looks right at one width and
+wrong at every other, and puts the words inside an image where screen readers
+and search cannot reach them. Cost: one measuring pass per resize, and the road
+is decoration -- everything it connects is readable without it.
+
 **No CORS, anywhere.** The frontend only ever calls relative `/api/...` paths —
 Vite proxies in development, nginx routes in production. The browser never makes
 a cross-origin request. Rejected: a configurable API base URL, which is more

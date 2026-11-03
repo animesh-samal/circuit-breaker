@@ -7,7 +7,7 @@ import { SectionHead } from "../SectionHead";
 
 export default function Projects() {
   return (
-    <section id="projects" className="section">
+    <section id="projects" className="section section--alt">
       <div className="container">
         <Reveal>
           <SectionHead eyebrow="Projects" title="Things I have" accent="built and run." />

@@ -1295,6 +1295,260 @@ code {
 }
 
 /* ---------------------------------------------------------------------------
+   Journey
+   --------------------------------------------------------------------------- */
+
+/* The bend at the end of the first row swings out past the last card into the
+   page margin. Clipped here so it can never add a horizontal scrollbar. */
+.journey-section {
+  overflow-x: clip;
+}
+
+.journey {
+  position: relative;
+}
+
+.journey-road {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.road-base {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 2;
+  stroke-dasharray: 2 7;
+  stroke-linecap: round;
+}
+
+/* pathLength="1" on each lit segment makes a dash of length 1 exactly cover
+   it, so offset 1 hides it and 0 shows it -- no measuring the path in JS.
+   Going 0 to 1 also retracts it from the far end, so pointing at an earlier
+   stop rewinds the road rather than wiping it from the start. */
+.road-lit {
+  fill: none;
+  stroke: url(#journey-grad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 5px var(--glow));
+  transition: stroke-dashoffset 380ms ease;
+  transition-delay: calc(var(--i) * 400ms + 200ms);
+}
+
+.journey.is-drawn .road-lit.is-lit {
+  stroke-dashoffset: 0;
+}
+
+.journey.is-settled .road-lit {
+  transition-duration: 300ms;
+  transition-delay: 0s;
+}
+
+.road-dot {
+  fill: var(--accent-2);
+  filter: drop-shadow(0 0 6px var(--accent-2));
+}
+
+.journey-stops {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Stops arrive one by one as the road reaches them. Only opacity on the stop
+   and `translate` on the card: moving the stop itself would move its node, and
+   the road is measured from the nodes. */
+.stop {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  opacity: 0;
+  transition: opacity 500ms ease;
+  transition-delay: calc(var(--i) * 400ms);
+}
+
+.journey.is-drawn .stop {
+  opacity: 1;
+}
+
+.journey.is-drawn .stop.is-ahead {
+  opacity: 0.42;
+}
+
+.journey.is-settled .stop,
+.journey.is-settled .stop-card {
+  transition-delay: 0s;
+}
+
+.stop-node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  color: var(--accent-2);
+  background: var(--surface);
+  border: 2px solid color-mix(in srgb, var(--accent-2) 45%, var(--border-strong));
+  border-radius: 50%;
+  /* A ring in the page colour, so the road stops at the node rather than
+     visibly running underneath it. */
+  box-shadow: 0 0 0 6px var(--bg);
+  transition: transform 250ms ease, color 250ms ease, background-color 250ms ease, border-color 250ms ease,
+    box-shadow 250ms ease;
+}
+
+.stop.is-now .stop-node::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--accent-2);
+  border-radius: 50%;
+  animation: node-pulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes node-pulse {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.75);
+  }
+}
+
+.stop-card {
+  flex: 1;
+  min-width: 0;
+  padding: 1.25rem 1.35rem 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  translate: 0 14px;
+  transition: translate 500ms ease, transform 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
+  transition-delay: calc(var(--i) * 400ms), 0s, 0s, 0s;
+}
+
+.journey.is-drawn .stop-card {
+  translate: none;
+}
+
+/* The pointed-at stop: its card lifts and catches the accent, its node fills
+   with the gradient. */
+.stop.is-active .stop-card {
+  transform: translateY(-6px);
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--border-strong));
+  box-shadow: var(--shadow), 0 0 0 1px color-mix(in srgb, var(--accent-2) 25%, transparent);
+}
+
+.stop.is-active .stop-node {
+  color: var(--accent-contrast);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  box-shadow: 0 0 0 6px var(--bg), 0 0 26px var(--glow);
+  transform: scale(1.12);
+}
+
+.stop-when {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.stop-card h3 {
+  margin-bottom: 0.2rem;
+  font-size: 1.15rem;
+}
+
+.stop-place {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+
+.stop-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.stop-stat {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-mute);
+}
+
+.stop-stat strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.stop-card .chips {
+  margin-top: 0.9rem;
+}
+
+.stop-cta {
+  margin-top: 0.9rem;
+}
+
+@media (min-width: 900px) {
+  .journey-stops {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 3.25rem;
+  }
+
+  .stop {
+    grid-row: var(--row);
+    grid-column: var(--col);
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stop-card {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stop.is-now .stop-node::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* The last section and the footer share a background; one hairline between
+   them is enough. */
+#main > .section--alt:last-child {
+  border-bottom: 0;
+}
+
+/* ---------------------------------------------------------------------------
    Contact
    --------------------------------------------------------------------------- */
 
@@ -1482,6 +1736,7 @@ code {
 
 /* Frosted surfaces sit over the Ghibli landscape without losing legibility. */
 [data-theme="ghibli"] .card,
+[data-theme="ghibli"] .stop-card,
 [data-theme="ghibli"] .contact-item,
 [data-theme="ghibli"] .stat-tile,
 [data-theme="ghibli"] .holo-panel {
