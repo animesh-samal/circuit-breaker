@@ -2,6 +2,7 @@ import About from "../components/home/About";
 import Contact from "../components/home/Contact";
 import Experience from "../components/home/Experience";
 import Hero from "../components/home/Hero";
+import Journey from "../components/home/Journey";
 import Projects from "../components/home/Projects";
 import Skills from "../components/home/Skills";
 import Writing from "../components/home/Writing";
@@ -15,6 +16,7 @@ export default function Home() {
     <>
       <Hero />
       <About />
+      <Journey />
       <Experience />
       <Skills />
       <Projects />

@@ -4,7 +4,7 @@ import { SectionHead } from "../SectionHead";
 
 export default function Experience() {
   return (
-    <section id="experience" className="section">
+    <section id="experience" className="section section--alt">
       <div className="container">
         <Reveal>
           <SectionHead eyebrow="Experience" title="Pipelines, releases, and" accent="the parts nobody else wanted." />

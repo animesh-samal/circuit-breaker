@@ -8,7 +8,7 @@ import { SectionHead } from "../SectionHead";
 
 export default function Writing() {
   return (
-    <section id="writing" className="section section--alt">
+    <section id="writing" className="section">
       <div className="container">
         <Reveal>
           <SectionHead

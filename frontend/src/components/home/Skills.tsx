@@ -4,7 +4,7 @@ import { SectionHead } from "../SectionHead";
 
 export default function Skills() {
   return (
-    <section id="skills" className="section section--alt">
+    <section id="skills" className="section">
       <div className="container">
         <Reveal>
           <SectionHead

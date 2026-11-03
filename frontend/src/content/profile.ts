@@ -158,3 +158,73 @@ export const PROJECTS: Project[] = [
     stack: ["Python", "XGBoost", "scikit-learn"],
   },
 ];
+
+export type JourneyIcon = "cap" | "chart" | "briefcase" | "branch" | "server" | "flag";
+
+export interface JourneyStop {
+  when: string;
+  title: string;
+  place: string;
+  text: string;
+  stat?: { value: string; label: string };
+  tags?: string[];
+  icon: JourneyIcon;
+  /* The stop I am at now. Gets the pulse and the contact link. */
+  now?: boolean;
+}
+
+/* The journey diagram, in order. Same rule as STATS: every line here is backed
+   by the CV or the about text. A recruiter who checks one claim and finds it
+   inflated stops believing the rest. */
+export const JOURNEY: JourneyStop[] = [
+  {
+    when: "2020",
+    title: "Started engineering",
+    place: "IGIT Sarang, Odisha",
+    text: "B.Tech in Electronics and Telecommunication. Mostly signals and circuits, a long way from servers.",
+    stat: { value: "8.73", label: "CGPA out of 10" },
+    icon: "cap",
+  },
+  {
+    when: "Final year",
+    title: "First taste of machine learning",
+    place: "SolarOptimate, my thesis",
+    text: "Used gradient-boosted trees to predict the best tilt angle for solar panels from weather data.",
+    tags: ["Python", "XGBoost", "scikit-learn"],
+    icon: "chart",
+  },
+  {
+    when: "Oct 2024",
+    title: "Joined Deloitte",
+    place: "Deloitte USI · AI & Data",
+    text: "Started on the data side, looking after Python ETL pipelines for healthcare data.",
+    stat: { value: "100–300 GB", label: "of data a month" },
+    tags: ["Python", "SQL", "AWS S3"],
+    icon: "briefcase",
+  },
+  {
+    when: "At Deloitte",
+    title: "Took over the releases",
+    place: "Deployment lead",
+    text: "Got curious about why releases kept breaking. Ended up owning the pipeline, the branching strategy and the release process for the team.",
+    stat: { value: "< 2 min", label: "deploys, down from 25–30" },
+    tags: ["GitLab CI", "Git", "SAST"],
+    icon: "branch",
+  },
+  {
+    when: "2026",
+    title: "Built this site",
+    place: "Circuit Breaker",
+    text: "Learning Terraform and Kubernetes by building and running this site on AWS myself, end to end.",
+    tags: ["Terraform", "Kubernetes", "AWS", "Docker"],
+    icon: "server",
+  },
+  {
+    when: "Now",
+    title: "Looking for what's next",
+    place: "Hyderabad · remote or hybrid",
+    text: "Open to DevOps, platform and SRE roles. I reply within a day.",
+    icon: "flag",
+    now: true,
+  },
+];

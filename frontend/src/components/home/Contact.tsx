@@ -8,7 +8,7 @@ import { SectionHead } from "../SectionHead";
  * protection -- and a mailto link does the same job with none of that. */
 export default function Contact() {
   return (
-    <section id="contact" className="section">
+    <section id="contact" className="section section--alt">
       <div className="container contact-grid">
         <Reveal>
           <SectionHead
