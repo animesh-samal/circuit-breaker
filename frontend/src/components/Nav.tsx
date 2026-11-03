@@ -53,7 +53,16 @@ function useActiveSection(enabled: boolean): string | null {
   return active;
 }
 
-export default function Nav({ theme, setTheme }: { theme: ThemeId; setTheme: (t: ThemeId) => void }) {
+interface Props {
+  theme: ThemeId;
+  setTheme: (t: ThemeId) => void;
+  onQuickJump: () => void;
+}
+
+// Shown on the quick jump button. Macs say Cmd, everything else says Ctrl.
+const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent);
+
+export default function Nav({ theme, setTheme, onQuickJump }: Props) {
   const { pathname, key } = useLocation();
   const { health } = useSystemStatus();
   const [open, setOpen] = useState(false);
@@ -115,6 +124,16 @@ export default function Nav({ theme, setTheme }: { theme: ThemeId; setTheme: (t:
         </ul>
 
         <div className="nav-actions">
+          <button
+            type="button"
+            className="pill-btn jump-btn"
+            aria-label="Quick jump"
+            aria-keyshortcuts="Control+K Meta+K"
+            onClick={onQuickJump}
+          >
+            <Icon name="search" />
+            <kbd className="kbd">{IS_MAC ? "⌘K" : "Ctrl K"}</kbd>
+          </button>
           <ThemeMenu theme={theme} setTheme={setTheme} />
           <button
             type="button"

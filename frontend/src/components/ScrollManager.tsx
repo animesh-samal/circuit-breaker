@@ -21,8 +21,11 @@ export default function ScrollManager() {
   const navType = useNavigationType();
 
   useEffect(() => {
-    if (hash) {
-      document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView();
+    // A hash naming a section that is not on the page falls through to the
+    // top, rather than leaving the new page wherever the old one was scrolled.
+    const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    if (target) {
+      target.scrollIntoView();
       return;
     }
     if (navType !== "POP") {

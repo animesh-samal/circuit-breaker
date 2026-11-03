@@ -1,8 +1,8 @@
 /* Hand-rolled icon set.
  *
- * Nine glyphs at 16px, 1.4 stroke, currentColor. Written inline rather than
+ * Ten glyphs at 16px, 1.4 stroke, currentColor. Written inline rather than
  * pulling in lucide-react or an icon font: this is roughly 1.5 KB against ~60 KB
- * for a library we would use nine glyphs of, and it lets the stroke weight be
+ * for a library we would use ten glyphs of, and it lets the stroke weight be
  * tuned to sit correctly beside the type rather than accepting a default.
  *
  * The GitHub mark is the one filled glyph -- an outline version of it stops
@@ -18,7 +18,8 @@ export type IconName =
   | "arrow-up-right"
   | "menu"
   | "close"
-  | "contrast";
+  | "contrast"
+  | "search";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   mail: (
@@ -49,6 +50,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <circle cx="8" cy="8" r="5.5" />
       <path d="M8 2.5a5.5 5.5 0 0 1 0 11Z" fill="currentColor" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="7" cy="7" r="4.5" />
+      <path d="m10.4 10.4 3.1 3.1" />
     </>
   ),
 };
