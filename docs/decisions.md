@@ -103,6 +103,13 @@ which this SPA already requires.
 party with a key in the page, or a new endpoint with abuse protection. A mailto
 link does the same job with none of that. Cost: no message box on the page.
 
+**Quick jump on Ctrl+K, built on `<dialog>`.** One box to reach any section,
+page, post, theme or contact link. Rejected: a positioned overlay div, which
+has to re-implement what `showModal()` gives for free -- inert background,
+focus kept inside, Escape to close, focus handed back afterwards. Cost: the
+backdrop click has to be detected by hand, since a click on `::backdrop`
+arrives as a click on the dialog itself.
+
 **Indicator lamps carry real state.** The Infrastructure lamp polls
 `/api/breakers` and shows green, amber or red for actual system health rather
 than merely echoing which page is open. A light meaning "you clicked this" is a

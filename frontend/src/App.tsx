@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Footer from "./components/Footer";
 import GhibliScene from "./components/GhibliScene";
 import Nav from "./components/Nav";
+import QuickJump from "./components/QuickJump";
 import ScrollManager from "./components/ScrollManager";
 import { SystemStatusProvider } from "./lib/systemStatus";
 import Blog from "./pages/Blog";
@@ -15,6 +17,7 @@ import { useTheme } from "./lib/useTheme";
 
 export default function App() {
   const { theme, setTheme } = useTheme();
+  const [jumpOpen, setJumpOpen] = useState(false);
 
   return (
     <SystemStatusProvider>
@@ -27,7 +30,8 @@ export default function App() {
       {theme === "ghibli" && <GhibliScene />}
 
       <ScrollManager />
-      <Nav theme={theme} setTheme={setTheme} />
+      <Nav theme={theme} setTheme={setTheme} onQuickJump={() => setJumpOpen(true)} />
+      <QuickJump open={jumpOpen} setOpen={setJumpOpen} theme={theme} setTheme={setTheme} />
 
       <main id="main" tabIndex={-1}>
         <Routes>
