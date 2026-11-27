@@ -52,6 +52,30 @@ class Settings(BaseSettings):
     # mistaken for real telemetry.
     mock_infra: bool = False
 
+    # Admin panel. Everything the site says about me lives in one document in
+    # DynamoDB, and uploaded files (the CV) live in a private S3 bucket. Both are
+    # reached through the node's instance profile like the rest of AWS here.
+    content_table: str = "circuit-breaker-content"
+    uploads_bucket: str = ""  # empty means uploads are not configured yet
+    # One SecureString parameter holding the password check, the authenticator
+    # seed and the session key. Not a Kubernetes Secret: see docs/admin.md.
+    admin_param: str = "/circuit-breaker/admin"
+    admin_session_hours: float = 12.0
+    # Browsers refuse to keep a Secure cookie over plain http, so local
+    # development over http://localhost has to turn this off. Never in prod.
+    admin_cookie_secure: bool = True
+    # Comma-separated. A request from a browser that names any other origin is
+    # refused, on top of the SameSite cookie and the CSRF token.
+    admin_origins: str = "https://animesh.space,https://www.animesh.space"
+    content_ttl: float = 15.0
+    max_cv_bytes: int = 5 * 1024 * 1024
+
+    # Credentials for local development, read only when mock_infra is true. They
+    # exist so the admin panel can be tried without an AWS account; leave them
+    # empty anywhere else.
+    admin_dev_password: str = ""
+    admin_dev_totp_secret: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

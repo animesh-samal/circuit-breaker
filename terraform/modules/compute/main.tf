@@ -44,6 +44,8 @@ resource "aws_iam_role" "node" {
   assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "node" {
   # Pull images. GetAuthorizationToken cannot be scoped to a repository -- it
   # is an account-level operation, which is why it sits in its own statement
@@ -100,6 +102,37 @@ data "aws_iam_policy_document" "node" {
     sid       = "Dynamo"
     actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query"]
     resources = var.dynamodb_table_arns
+  }
+
+  # The admin panel's content. Read and write the one table, and nothing else.
+  # PutItem also covers the transaction the API writes, which has no separate
+  # permission of its own.
+  statement {
+    sid = "AdminContent"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query",
+    ]
+    resources = [var.content_table_arn]
+  }
+
+  # Uploaded files. Objects only: no listing the bucket, no deleting, no policy.
+  statement {
+    sid       = "AdminFiles"
+    actions   = ["s3:GetObject", "s3:PutObject"]
+    resources = ["${var.uploads_bucket_arn}/*"]
+  }
+
+  # The sign-in credentials: one parameter. It is a SecureString under the
+  # account's default AWS-managed key, which any principal allowed to read the
+  # parameter can decrypt, so no separate key permission is needed.
+  statement {
+    sid       = "AdminSignIn"
+    actions   = ["ssm:GetParameter"]
+    resources = ["arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter${var.admin_parameter_name}"]
   }
 
   # Cost Explorer is account-scoped; it has no resource ARNs at all.

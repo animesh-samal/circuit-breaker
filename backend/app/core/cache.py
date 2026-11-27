@@ -73,6 +73,12 @@ class TTLCache:
         async with self._lock:
             self._entries.clear()
 
+    async def invalidate(self, key: str) -> None:
+        """Forget one entry, so the next read goes to the source. Used after a
+        write, so the replica that took it does not keep serving the old value."""
+        async with self._lock:
+            self._entries.pop(key, None)
+
     def keys(self) -> list[str]:
         return list(self._entries)
 

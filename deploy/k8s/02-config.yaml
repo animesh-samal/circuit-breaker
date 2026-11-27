@@ -24,6 +24,16 @@ data:
   CHAOS_ENABLED: "true"
   CHAOS_MIN_REPLICAS: "2"
 
+  # Admin panel (docs/admin.md). Names, not credentials: the sign-in secrets
+  # live in an encrypted AWS parameter the API reads through the node's role,
+  # so there is still nothing secret in this file or in the cluster.
+  # UPLOADS_BUCKET must match uploads_bucket_name in terraform/envs/prod.
+  CONTENT_TABLE: "circuit-breaker-content"
+  UPLOADS_BUCKET: "animesh-circuit-breaker-uploads"
+  ADMIN_PARAM: "/circuit-breaker/admin"
+  ADMIN_COOKIE_SECURE: "true"
+  ADMIN_ORIGINS: "https://animesh.space,https://www.animesh.space"
+
   # Cost Explorer bills $0.01 per request. 86400s means one call a day.
   COST_TTL: "86400"
   CLUSTER_TTL: "10"

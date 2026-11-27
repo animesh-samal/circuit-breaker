@@ -37,3 +37,13 @@ output "dashboard_url" {
 output "deploys_table" {
   value = module.data.deploys_table
 }
+
+output "content_table" {
+  description = "Where the admin panel saves the site content."
+  value       = module.data.content_table
+}
+
+output "uploads_bucket" {
+  description = "Where uploaded files live. Must match UPLOADS_BUCKET in deploy/k8s/02-config.yaml."
+  value       = module.data.uploads_bucket
+}
