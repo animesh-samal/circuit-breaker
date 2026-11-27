@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { JOURNEY, type JourneyIcon } from "../../content/profile";
+import { useReducedMotion } from "../../lib/useReducedMotion";
 import Icon from "../Icons";
 import Reveal from "../Reveal";
 import { SectionHead } from "../SectionHead";
@@ -106,19 +107,6 @@ function segment(a: Point, b: Point, edge: number | null): string {
     `A ${r} ${r} 0 0 ${sweep} ${edge - side * r} ${b.y}`,
     `L ${b.x} ${b.y}`,
   ].join(" ");
-}
-
-function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    if (!mq) return;
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
 }
 
 export default function Journey() {

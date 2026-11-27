@@ -127,6 +127,7 @@
 :root {
   --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: "Playfair Display", "Times New Roman", Georgia, serif;
 
   --page: 1200px;
   --gutter: clamp(1rem, 4vw, 2rem);
@@ -382,8 +383,7 @@ code {
 }
 
 /* Sections stop below the sticky bar when jumped to, not underneath it. */
-.section,
-.hero {
+.section {
   scroll-margin-top: var(--nav-h);
 }
 
@@ -619,7 +619,7 @@ code {
    Top bar
    --------------------------------------------------------------------------- */
 
-/* Clear over the top of the page, so the hero reads as one field; frosted with
+/* Clear over the top of the page, so the tunnel reads as one field; frosted with
    a hairline once content scrolls under it. */
 .site-header {
   position: sticky;
@@ -1044,179 +1044,10 @@ html:has(.qj[open]) {
 }
 
 /* ---------------------------------------------------------------------------
-   Hero
+   Live badge
    --------------------------------------------------------------------------- */
 
-.hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  min-height: calc(100svh - var(--nav-h));
-  padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(4rem, 8vw, 6rem);
-}
-
-/* A faint ruled grid that fades out from the middle, plus a second pool of the
-   other accent low on the left. Both are background paint on pseudo-elements:
-   no extra nodes, nothing to animate. */
-.hero::before,
-.hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.hero::before {
-  background-image: linear-gradient(color-mix(in srgb, var(--border) 70%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--border) 70%, transparent) 1px, transparent 1px);
-  background-size: 56px 56px;
-  -webkit-mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, #000 25%, transparent 75%);
-  mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, #000 25%, transparent 75%);
-  opacity: 0.6;
-}
-
-.hero::after {
-  background: radial-gradient(34rem 26rem at 8% 95%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 70%);
-}
-
-[data-theme="ghibli"] .hero::before,
-[data-theme="ghibli"] .hero::after {
-  display: none;
-}
-
-.hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.8fr);
-  gap: clamp(2.5rem, 6vw, 5.5rem);
-  align-items: center;
-}
-
-.hero-name {
-  margin: 0 0 0.9rem;
-  font-size: clamp(3.1rem, 8.4vw, 6.4rem);
-  font-weight: 800;
-  line-height: 0.98;
-  letter-spacing: -0.055em;
-}
-
-.hero-role {
-  margin: 0 0 0.6rem;
-  font-size: clamp(1.25rem, 2.4vw, 1.7rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--text);
-}
-
-.hero-rotate {
-  min-height: 1.7em;
-  margin: 0 0 1.5rem;
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  color: var(--text-mute);
-}
-
-.hero-rotate-word {
-  display: inline-block;
-  font-weight: 500;
-  color: var(--accent-2);
-  animation: word-in 420ms ease;
-}
-
-.cursor {
-  display: inline-block;
-  width: 2px;
-  height: 1.1em;
-  margin-left: 4px;
-  vertical-align: -0.2em;
-  background: var(--accent-2);
-  animation: blink 1s steps(1) infinite;
-}
-
-@keyframes word-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-rotate-word {
-    animation: none !important;
-  }
-  .cursor {
-    display: none;
-  }
-}
-
-.hero-lead {
-  max-width: 38rem;
-  margin: 0 0 2rem;
-  font-size: 1.125rem;
-  line-height: 1.75;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-}
-
-.hero-visual {
-  position: relative;
-  isolation: isolate;
-  justify-self: end;
-  width: min(100%, 420px);
-}
-
-/* A gradient frame offset behind the photo. Static -- a spinning ring around a
-   face is a screensaver. */
-.hero-visual::before {
-  content: "";
-  position: absolute;
-  inset: -12px;
-  z-index: -1;
-  border-radius: 34px;
-  background: linear-gradient(
-    140deg,
-    color-mix(in srgb, var(--accent) 55%, transparent),
-    transparent 38%,
-    transparent 62%,
-    color-mix(in srgb, var(--accent-2) 55%, transparent)
-  );
-  opacity: 0.55;
-}
-
-.portrait {
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 26px;
-  box-shadow: var(--shadow);
-}
-
-.portrait img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 20%;
-}
-
 .live-badge {
-  position: absolute;
-  left: -1.5rem;
-  bottom: 1.75rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -2241,26 +2072,10 @@ html:has(.qj[open]) {
 }
 
 @media (max-width: 900px) {
-  .hero {
-    min-height: 0;
-  }
-
-  .hero-grid,
   .about-grid,
   .contact-grid,
   .project-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hero-visual {
-    justify-self: start;
-    width: min(100%, 360px);
-    margin-left: 12px;
-  }
-
-  .live-badge {
-    left: 0.75rem;
-    bottom: 1rem;
   }
 
   .job {
@@ -2278,10 +2093,6 @@ html:has(.qj[open]) {
 @media (max-width: 480px) {
   .theme-menu-label {
     display: none;
-  }
-
-  .hero-actions .btn {
-    flex: 1 1 100%;
   }
 
   .stat-grid {
