@@ -7,6 +7,22 @@ variable "log_group_arn" { type = string }
 variable "ecr_repository_arns" { type = list(string) }
 variable "dynamodb_table_arns" { type = list(string) }
 
+variable "content_table_arn" {
+  description = "The table the admin panel saves the site content in."
+  type        = string
+}
+
+variable "uploads_bucket_arn" {
+  description = "The private bucket that holds uploaded files such as the CV."
+  type        = string
+}
+
+variable "admin_parameter_name" {
+  description = "Name of the encrypted parameter holding the admin sign-in credentials."
+  type        = string
+  default     = "/circuit-breaker/admin"
+}
+
 variable "instance_type" {
   description = <<-EOT
     t3.small (2 GiB) is the smallest size that runs k3s comfortably. Measured on

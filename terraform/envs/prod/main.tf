@@ -61,7 +61,8 @@ module "registry" {
 module "data" {
   source = "../../modules/data"
 
-  project = var.project
+  project             = var.project
+  uploads_bucket_name = var.uploads_bucket_name
 }
 
 module "compute" {
@@ -75,6 +76,8 @@ module "compute" {
   log_group_arn       = aws_cloudwatch_log_group.app.arn
   ecr_repository_arns = module.registry.repository_arns
   dynamodb_table_arns = module.data.table_arns
+  content_table_arn   = module.data.content_table_arn
+  uploads_bucket_arn  = module.data.uploads_bucket_arn
   instance_type       = var.instance_type
   key_name            = var.key_name
   k3s_token           = random_password.k3s_token.result
