@@ -68,6 +68,7 @@ class AwsClients:
         self._cloudwatch: Any = None
         self._ce: Any = None
         self._dynamodb: Any = None
+        self._ssm: Any = None
 
     def _region(self) -> str:
         return get_settings().aws_region
@@ -97,6 +98,31 @@ class AwsClients:
 
             self._dynamodb = boto3.resource("dynamodb", region_name=self._region())
         return self._dynamodb
+
+    @property
+    def ssm(self) -> Any:
+        if self._ssm is None:
+            import boto3
+
+            self._ssm = boto3.client("ssm", region_name=self._region())
+        return self._ssm
+
+    async def get_secure_parameter(self, name: str) -> str | None:
+        """The decrypted value of a SecureString parameter, or None if it does
+        not exist. A missing parameter is an expected state (the admin panel has
+        not been set up yet), not an error."""
+        return await asyncio.to_thread(self._get_secure_parameter_sync, name)
+
+    def _get_secure_parameter_sync(self, name: str) -> str | None:
+        from botocore.exceptions import ClientError
+
+        try:
+            response = self.ssm.get_parameter(Name=name, WithDecryption=True)
+        except ClientError as err:
+            if err.response.get("Error", {}).get("Code") == "ParameterNotFound":
+                return None
+            raise
+        return str(response["Parameter"]["Value"])
 
     # -- CloudWatch --------------------------------------------------------
 

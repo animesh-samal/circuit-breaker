@@ -197,6 +197,41 @@ update is still one edit.
 the big card titles. Nothing else on the site uses it. Cost: one more font
 request, which is why it is two styles and no more.
 
+**The admin panel keeps content in DynamoDB and files in S3, not in the cluster.**
+The API runs as two replicas with a read-only filesystem, so a file on the pod
+would be a different file on each one, and a ConfigMap edit would need a deploy.
+One DynamoDB table holds the whole content document plus a copy of every saved
+version; a private bucket holds the CV. Rejected: committing content to git
+from the admin panel, which would mean a repository-writing token living in
+production. Cost: two new AWS resources and a one-time Terraform apply, which
+stays manual like the rest. Until that is done the site serves its built-in
+content and the panel reports itself as not set up, so deploying the code first
+is safe.
+
+**Sign-in credentials are one encrypted AWS parameter, not a Kubernetes Secret.**
+The project's rule is that there are no Secrets in the cluster, and the admin
+panel did not need to break it. The password hash, the authenticator seed and
+the session key sit in a SecureString parameter that the API reads at runtime
+through the node's role and holds for five minutes. Rotating them is one command
+and ends every session. Rejected: a password alone (one leak is a full takeover)
+and "sign in with GitHub" (needs a client secret stored somewhere anyway, and a
+second service in the trust path); a password plus an authenticator code was the
+owner's choice.
+
+**Authentication is a few lines of standard library, tested against the standards.**
+scrypt for the password, RFC 6238 for the codes and HMAC for the sessions, with
+no new dependency. The one-time codes are checked against the RFC's own test
+vectors. Sessions are signed, expiring tokens, so the replicas agree without
+sharing a session table; the price is that a stolen cookie lives until it
+expires, which changing the credentials ends at once.
+
+**Content is validated like input from a stranger.** The admin form is trusted
+only as far as the person typing, and the save endpoint checks every field:
+lengths, list sizes, unknown fields, and above all links, which must be https or
+a path on the site because they end up in an href on a public page. The CV
+pointer is set only by the upload endpoint, so a save can never point it at
+another file. Versions restored from history pass the same checks again.
+
 **No CORS, anywhere.** The frontend only ever calls relative `/api/...` paths —
 Vite proxies in development, nginx routes in production. The browser never makes
 a cross-origin request. Rejected: a configurable API base URL, which is more

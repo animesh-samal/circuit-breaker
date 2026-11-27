@@ -13,7 +13,7 @@ from app.clients.aws import aws
 from app.core.config import get_settings
 from app.core.state import state
 from app.core.telemetry import buffer
-from app.routers import chaos, health, infra
+from app.routers import admin, chaos, content, health, infra
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +117,8 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/api")
     app.include_router(infra.router, prefix="/api")
     app.include_router(chaos.router, prefix="/api")
+    app.include_router(content.router, prefix="/api")
+    app.include_router(admin.router, prefix="/api")
 
     return app
 

@@ -63,3 +63,11 @@ pytest
 | `GET /api/version` | Git SHA, tag, build time. | UI and humans |
 
 See `docs/adr/0003-probe-design.md` for why liveness checks nothing.
+
+## Admin panel
+
+The API also serves the site's editable content (`/api/content`, `/api/cv`) and an
+admin API under `/api/admin`: sign-in with a password and an authenticator code,
+saving the content document, replacing the CV, and version history. Setup, daily
+use and the security model are in [`docs/admin.md`](../docs/admin.md). Try it
+without AWS by running in mock mode with the `ADMIN_DEV_*` variables described there.

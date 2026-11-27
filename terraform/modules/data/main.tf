@@ -58,3 +58,140 @@ resource "aws_dynamodb_table" "cache" {
 
   tags = { Name = "${var.project}-cache" }
 }
+
+# What the website says, as one document, with every saved version kept.
+#
+# Written by the admin panel (see docs/admin.md). The table also holds two small
+# bookkeeping items for sign-in: a failed-attempt counter and the last one-time
+# code used. Same provisioned free-tier reasoning as the tables above; with the
+# other two this is 15 of the 25 free units.
+#
+# It is deliberately NOT in the table_arns output. That list is shared with the
+# deploy role, and CI has no business being able to write the site's content.
+
+resource "aws_dynamodb_table" "content" {
+  name           = "${var.project}-content"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 5
+  write_capacity = 5
+
+  hash_key  = "pk"
+  range_key = "sk"
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+
+  attribute {
+    name = "sk"
+    type = "S"
+  }
+
+  # Old versions and sign-in counters carry an expiry; DynamoDB deletes them.
+  ttl {
+    attribute_name = "expires_at"
+    enabled        = true
+  }
+
+  # Point-in-time recovery is off: the table keeps its own version history, and
+  # recovery is billed per gigabyte-month for a table that holds kilobytes.
+  point_in_time_recovery {
+    enabled = false
+  }
+
+  tags = { Name = "${var.project}-content" }
+}
+
+# Uploaded files: the CV. Private, encrypted, and versioned, so replacing the CV
+# never destroys the old one. Nothing reads it directly; the API streams a file
+# out, so an object cannot be fetched by guessing its address.
+
+resource "aws_s3_bucket" "uploads" {
+  bucket = var.uploads_bucket_name
+
+  tags = { Name = var.uploads_bucket_name }
+}
+
+resource "aws_s3_bucket_public_access_block" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+
+  rule {
+    id     = "expire-old-versions"
+    status = "Enabled"
+
+    filter {}
+
+    # Replaced CVs are kept for a year, then removed.
+    noncurrent_version_expiration {
+      noncurrent_days = 365
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+# Refuse any request that is not over TLS.
+data "aws_iam_policy_document" "uploads_tls" {
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.uploads.arn, "${aws_s3_bucket.uploads.arn}/*"]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "uploads" {
+  bucket = aws_s3_bucket.uploads.id
+  policy = data.aws_iam_policy_document.uploads_tls.json
+
+  depends_on = [aws_s3_bucket_public_access_block.uploads]
+}

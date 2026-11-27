@@ -30,6 +30,9 @@ dev = [
     "pytest-cov>=6.0",
     "pytest-asyncio>=0.24",
     "httpx>=0.27",
+    # Imitates DynamoDB, S3 and the parameter store in memory, so the real
+    # query and update expressions are exercised by the tests.
+    "moto[dynamodb,s3,ssm]>=5.0",
     "ruff>=0.7",
     "mypy>=1.13",
 ]
@@ -68,6 +71,14 @@ warn_unreachable = true
 [[tool.mypy.overrides]]
 module = ["boto3.*", "botocore.*", "kubernetes.*"]
 ignore_missing_imports = true
+
+# Newer releases of the kubernetes package ship type information, but its config
+# loaders (load_incluster_config, load_kube_config) have no annotations, so strict
+# mode refuses to call them. Relaxed for the one module that does the calling,
+# not globally: everywhere else an untyped call is still an error.
+[[tool.mypy.overrides]]
+module = ["app.clients.k8s"]
+disallow_untyped_calls = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

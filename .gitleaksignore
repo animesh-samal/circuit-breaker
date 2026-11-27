@@ -1,0 +1,9 @@
+# Findings that are not secrets.
+#
+# Both lines are the example seed published in RFC 6238, the standard for
+# authenticator codes (the plain text 12345678901234567890, base32 encoded). It
+# is a public test value used in the tests, and has never protected anything.
+# The tests now build it from its plain text, so no new finding can appear; these
+# two fingerprints cover the first commit that wrote it out in encoded form.
+dda1e26471350f93321b4a0f9c54d02dd005954b:backend/tests/test_admin_routes.py:generic-api-key:25
+dda1e26471350f93321b4a0f9c54d02dd005954b:backend/tests/test_blob_and_credentials.py:generic-api-key:54

@@ -67,3 +67,9 @@ variable "alert_email" {
   description = "Budget and alarm notifications."
   type        = string
 }
+
+variable "uploads_bucket_name" {
+  description = "Globally unique name of the private bucket for uploaded files. Must match UPLOADS_BUCKET in deploy/k8s/02-config.yaml."
+  type        = string
+  default     = "animesh-circuit-breaker-uploads"
+}
