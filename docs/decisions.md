@@ -140,8 +140,27 @@ from screen readers. The same facts are in the "Step inside" panel (a native
 `<dialog>`, like the quick jump) and in the ordinary sections below. Cards are
 placed by a loop that writes transforms straight to the elements and runs only
 while the tunnel is on screen; going through React state for a hundred cards at
-sixty frames a second would be far slower. Phones, low-power laptops and anyone
-who asked for reduced motion get a shorter corridor with fewer cards.
+sixty frames a second would be far slower.
+
+**Perspective on each card, not on a shared camera layer.** The usual way to
+build a corridor is `perspective` on a wrapper and `preserve-3d` on every layer
+below it. Safari flattens that chain, and the whole corridor collapses into a
+flat row of cards. Each card now carries its own `perspective()` in its own
+transform, which every browser draws the same way. Cost: the browser stops
+sorting cards by depth, so z-index is set by hand from each card's distance, and
+the layers cannot intersect (the featured cards stay clear of the walls). This
+was found by running Safari's engine (WebKit) next to Chrome: a plain box with
+wrapper perspective drew flat there, and the same box with its own
+`perspective()` drew correctly.
+
+**One tunnel for every screen.** There is no phone version. Wide and tall
+screens get the same cards, the same count, the same controls and the same
+camera; only the scale and a few offsets change, chosen once in `measure()` from
+the shape of the screen. A tall screen fits the front card to its width and
+centres it, turns the index into a row of chips along the top that scrolls
+sideways, and tucks the status badge under it. An earlier version dropped the
+index, the badge and half the cards on phones, which made the phone feel like a
+different site.
 
 **Card art ignores the theme, the tunnel's chrome does not.** The cards are
 miniature websites in their own colours, like screenshots, so their palette is

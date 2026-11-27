@@ -72,6 +72,14 @@ warn_unreachable = true
 module = ["boto3.*", "botocore.*", "kubernetes.*"]
 ignore_missing_imports = true
 
+# Newer releases of the kubernetes package ship type information, but its config
+# loaders (load_incluster_config, load_kube_config) have no annotations, so strict
+# mode refuses to call them. Relaxed for the one module that does the calling,
+# not globally: everywhere else an untyped call is still an error.
+[[tool.mypy.overrides]]
+module = ["app.clients.k8s"]
+disallow_untyped_calls = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --cov=app --cov-report=term-missing --cov-fail-under=80"
