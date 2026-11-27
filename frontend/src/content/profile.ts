@@ -22,7 +22,8 @@ export const AVAILABILITY: Array<{ label: string; value: string; ok?: boolean }>
   { label: "Replies", value: "Within 24 hours" },
 ];
 
-/* Rotated through on the hero. Kept short so the line never wraps on a phone. */
+/* What I work on, in short phrases. The card tunnel uses them as headlines on its
+   wall cards. */
 export const FOCUS = ["CI/CD pipelines", "Kubernetes on AWS", "Terraform", "release engineering"];
 
 export const HERO_STACK = ["Kubernetes", "Terraform", "AWS", "Docker", "GitHub Actions", "GitLab CI", "Python"];

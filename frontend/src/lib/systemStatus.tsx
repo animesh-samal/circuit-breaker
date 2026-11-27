@@ -11,7 +11,7 @@ interface SystemStatus {
 
 const StatusContext = createContext<SystemStatus>({ health: "unknown", version: null });
 
-/* One poll for the whole page. The nav lamp, the hero badge and the footer all
+/* One poll for the whole page. The nav lamp, the tunnel badge and the footer all
  * show some slice of this, and three components polling the same endpoint on
  * three timers would triple the requests for no extra information.
  *

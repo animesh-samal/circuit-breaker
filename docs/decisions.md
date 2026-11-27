@@ -114,7 +114,7 @@ arrives as a click on the dialog itself.
 `/api/breakers` and shows green, amber or red for actual system health rather
 than merely echoing which page is open. A light meaning "you clicked this" is a
 second highlight; a light meaning "the cluster is degraded" is information. The
-same reading drives the badge on the hero photo, through one shared poll rather
+same reading drives the badge on the card tunnel, through one shared poll rather
 than one per component.
 
 **Journey map drawn as SVG measured from the DOM.** The stops are an ordinary
@@ -124,6 +124,35 @@ SVG with the cards positioned inside it, which looks right at one width and
 wrong at every other, and puts the words inside an image where screen readers
 and search cannot reach them. Cost: one measuring pass per resize, and the road
 is decoration -- everything it connects is readable without it.
+
+**The card tunnel pins and follows the scroll instead of taking the wheel.** The
+first screen is a corridor of cards you move down. The section is tall and the
+corridor is `position: sticky` inside it, so the page's own scroll position is
+the camera position. Rejected: catching the wheel and stepping one card per
+notch, which is what most tunnel demos do. It fights trackpads, breaks the
+quick jump menu and the scrollbar, and traps a visitor who only wanted to read
+the page. Cost: the tunnel adds roughly two and a half screens of scrolling
+before the About section, so there is a "skip to the short version" link and the
+quick jump menu reaches everything.
+
+**The tunnel is a picture; its words live elsewhere.** The corridor is hidden
+from screen readers. The same facts are in the "Step inside" panel (a native
+`<dialog>`, like the quick jump) and in the ordinary sections below. Cards are
+placed by a loop that writes transforms straight to the elements and runs only
+while the tunnel is on screen; going through React state for a hundred cards at
+sixty frames a second would be far slower. Phones, low-power laptops and anyone
+who asked for reduced motion get a shorter corridor with fewer cards.
+
+**Card art ignores the theme, the tunnel's chrome does not.** The cards are
+miniature websites in their own colours, like screenshots, so their palette is
+fixed in `tunnel.css`. The caption, index, fog and panel use the theme variables
+and follow all five themes. This is the one place hex values are allowed in a
+stylesheet. The card text comes from `profile.ts` through `tunnel.ts`, so a CV
+update is still one edit.
+
+**A serif for the tunnel only.** Playfair Display, regular and italic, used for
+the big card titles. Nothing else on the site uses it. Cost: one more font
+request, which is why it is two styles and no more.
 
 **No CORS, anywhere.** The frontend only ever calls relative `/api/...` paths —
 Vite proxies in development, nginx routes in production. The browser never makes

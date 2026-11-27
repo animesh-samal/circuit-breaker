@@ -20,7 +20,7 @@ const ITEMS: Item[] = [
   { label: "Contact", section: "contact" },
 ];
 
-// "home" and "writing" are watched too, so the highlight clears over the hero
+// "home" and "writing" are watched too, so the highlight clears over the tunnel
 // and the writing teaser instead of sticking to whichever link was last.
 const WATCHED = ["home", "about", "experience", "skills", "projects", "writing", "contact"];
 
@@ -79,7 +79,7 @@ export default function Nav({ theme, setTheme, onQuickJump }: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // The bar is borderless over the hero and picks up a hairline once content
+  // The bar is borderless over the tunnel and picks up a hairline once content
   // scrolls under it. Passive, and it only sets state when the answer flips.
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);

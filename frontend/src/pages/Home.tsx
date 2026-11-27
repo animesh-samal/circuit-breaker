@@ -1,11 +1,11 @@
 import About from "../components/home/About";
 import Contact from "../components/home/Contact";
 import Experience from "../components/home/Experience";
-import Hero from "../components/home/Hero";
 import Journey from "../components/home/Journey";
 import Projects from "../components/home/Projects";
 import Skills from "../components/home/Skills";
 import Writing from "../components/home/Writing";
+import CardTunnel from "../components/tunnel/CardTunnel";
 
 /* One long page. About, experience and contact used to be separate routes, each
  * a click away and each a few paragraphs long; a recruiter skimming the site
@@ -14,7 +14,7 @@ import Writing from "../components/home/Writing";
 export default function Home() {
   return (
     <>
-      <Hero />
+      <CardTunnel />
       <About />
       <Journey />
       <Experience />
