@@ -12,7 +12,7 @@
    --------------------------------------------------------------------------- */
 
 .tn-track {
-  --tn-h: max(560px, calc(100svh - var(--nav-h)));
+  --tn-h: max(300px, calc(100svh - var(--nav-h)));
   position: relative;
   /* One pinned screen, plus a stretch of ordinary scrolling for each step
      between two cards. */
@@ -39,32 +39,24 @@
    The corridor
    --------------------------------------------------------------------------- */
 
-.tn-vp {
+.tn-stage {
   position: absolute;
   inset: 0;
-  perspective: 1000px;
-  perspective-origin: 50% 50%;
+  /* Its own layer. The cards are given z-index values by depth, and without
+     this they would compete with the caption and the buttons above them. */
+  z-index: 0;
+  isolation: isolate;
 }
 
-/* Every level between the perspective and a card has to keep the 3D, or the
-   cards flatten into one plane. */
+/* Only an anchor point: the middle of the picture. Every card sits here and is
+   moved by its own transform, which carries its own perspective. There is no
+   shared 3D layer, because Safari flattens one. */
 .tn-rig {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: var(--tn-cy, 50%);
   width: 0;
   height: 0;
-  transform-style: preserve-3d;
-  transform: scale(var(--k, 1));
-}
-
-.tn-world {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  transform-style: preserve-3d;
 }
 
 .tn-card {
@@ -79,7 +71,6 @@
   background: var(--f-bg);
   visibility: hidden;
   will-change: transform, opacity;
-  backface-visibility: hidden;
 }
 
 .tn-wall {
@@ -187,6 +178,20 @@
   font-size: 0.75rem;
   letter-spacing: 0.03em;
   color: var(--text-mute);
+}
+
+.tn-hint-touch {
+  display: none;
+}
+
+@media (hover: none) {
+  .tn-hint-keys {
+    display: none;
+  }
+
+  .tn-hint-touch {
+    display: inline;
+  }
 }
 
 .tn-hint kbd {
@@ -984,25 +989,134 @@ html:has(.tn-dialog[open]) {
 }
 
 /* ---------------------------------------------------------------------------
-   Phones: no index or hint, and the caption takes the width
+   Tall screens (phones and tablets held upright)
    --------------------------------------------------------------------------- */
 
-@media (max-width: 720px) {
-  .tn-index,
-  .tn-live {
+/* The same tunnel with the same controls. What changes is the arrangement: the
+   picture sits a little above the middle with the front card centred, the index
+   becomes a row of chips along the top that scrolls sideways, and the status
+   badge tucks under it. The decision is made in CardTunnel.tsx from the shape of
+   the screen, so the stylesheet and the script can never disagree. */
+
+.tn[data-layout="portrait"] {
+  --tn-cy: 39%;
+}
+
+.tn[data-layout="portrait"] .tn-index {
+  top: 0.6rem;
+  left: 0;
+  right: 0;
+  width: auto;
+  text-shadow: none;
+}
+
+.tn[data-layout="portrait"] .tn-index-head {
+  display: none;
+}
+
+.tn[data-layout="portrait"] .tn-index ul {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  padding: 0.15rem var(--gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tn[data-layout="portrait"] .tn-index ul::-webkit-scrollbar {
+  display: none;
+}
+
+.tn[data-layout="portrait"] .tn-index li {
+  flex: 0 0 auto;
+}
+
+.tn[data-layout="portrait"] .tn-index button {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+}
+
+.tn[data-layout="portrait"] .tn-index button[aria-current="true"] {
+  color: var(--bg);
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.tn[data-layout="portrait"] .tn-live {
+  top: 3.7rem;
+  bottom: auto;
+  left: var(--gutter);
+}
+
+.tn[data-layout="portrait"] .tn-hint {
+  display: none;
+}
+
+.tn[data-layout="portrait"] .live-badge {
+  gap: 0.55rem;
+  padding: 0.45rem 0.9rem 0.45rem 0.75rem;
+  border-radius: 999px;
+}
+
+.tn[data-layout="portrait"] .live-badge .mono {
+  display: none;
+}
+
+.tn[data-layout="portrait"] .tn-cap {
+  bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.tn[data-layout="portrait"] .tn-cap::before {
+  inset: -5rem -2rem -2rem -2rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Short screens (a phone on its side, or a small window)
+   --------------------------------------------------------------------------- */
+
+/* The same content, with the optional lines dropped so the title and the
+   buttons always fit on the screen. */
+
+@media (max-height: 720px) {
+  .tn[data-layout="portrait"] .tn-say {
+    display: none;
+  }
+}
+
+@media (max-height: 520px) {
+  .tn-say,
+  .tn-kind,
+  .tn-skip,
+  .tn-hint,
+  .tn-index-head {
     display: none;
   }
 
-  .tn-rig {
-    top: 42%;
+  .tn-title {
+    margin-top: 0.4rem;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+  }
+
+  .tn-acts {
+    margin-top: 0.6rem;
+  }
+
+  .tn-index {
+    top: 0.5rem;
+  }
+
+  .tn-live {
+    bottom: 0.8rem;
   }
 
   .tn-cap {
-    bottom: 1.25rem;
-  }
-
-  .tn-cap::before {
-    inset: -5rem -2rem -2rem -2rem;
+    bottom: 0.8rem;
   }
 }
 
