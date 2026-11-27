@@ -1,8 +1,10 @@
-import { STATS } from "../../content/profile";
+import { useContent } from "../../lib/content";
 import Reveal from "../Reveal";
 import { SectionHead } from "../SectionHead";
 
 export default function About() {
+  const { stats } = useContent();
+
   return (
     <section id="about" className="section section--alt">
       <div className="container">
@@ -58,7 +60,7 @@ export default function About() {
 
         <Reveal>
           <ul className="stat-grid" aria-label="At Deloitte">
-            {STATS.map((s) => (
+            {stats.map((s) => (
               <li className="card stat-card" key={s.label}>
                 <strong>{s.value}</strong>
                 <span>{s.label}</span>

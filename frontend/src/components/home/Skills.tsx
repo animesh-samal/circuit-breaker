@@ -1,8 +1,10 @@
-import { SKILL_GROUPS } from "../../content/profile";
+import { useContent } from "../../lib/content";
 import Reveal from "../Reveal";
 import { SectionHead } from "../SectionHead";
 
 export default function Skills() {
+  const { skill_groups } = useContent();
+
   return (
     <section id="skills" className="section">
       <div className="container">
@@ -17,7 +19,7 @@ export default function Skills() {
 
         <Reveal>
           <div className="skill-grid">
-            {SKILL_GROUPS.map((group) => (
+            {skill_groups.map((group) => (
               <div className="card skill-card" key={group.title}>
                 <h3>{group.title}</h3>
                 <ul className="chips chips--sm">

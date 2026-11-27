@@ -162,6 +162,30 @@ sideways, and tucks the status badge under it. An earlier version dropped the
 index, the badge and half the cards on phones, which made the phone feel like a
 different site.
 
+**The site always has its words built in; saved content only overrides them.**
+The pages ship with their content compiled in (`content/profile.ts`), and
+`/api/content` is laid over it field by field. Rejected: making the API the only
+source, which turns a database outage into a blank front page. So first paint
+never waits for the network, an empty or unreachable API still gives a complete
+page, and the last answer is kept in localStorage so a returning visitor does not
+see the old words flash before the new ones. An answer of "nothing saved" clears
+that kept copy, so deleting content really does take it down. Cost: edited
+content takes up to about half a minute to reach a visitor (a 15 second server
+cache and a 15 second browser cache).
+
+**The tunnel is built from the content, not a fixed list of seven.** Each visible
+project gets a card (up to four), so adding a project in the admin panel puts it
+in the tunnel. All project cards share one face and take one of four colourways
+by position. Every lookup has a fallback, because the content is edited by hand
+and a missing figure must give an empty card, never a blank page.
+
+**The admin panel is its own chunk, reached only by typing /admin.** It is
+loaded lazily so visitors never download it, is linked from nowhere, asks search
+engines to skip it, and shows nothing until sign-in. The CSRF token lives only in
+a module variable, never in storage; after a refresh it is fetched again from
+`/api/admin/me`. Saving sends the version the editor started from, so a stale tab
+is refused with a plain explanation instead of overwriting newer work.
+
 **Card art ignores the theme, the tunnel's chrome does not.** The cards are
 miniature websites in their own colours, like screenshots, so their palette is
 fixed in `tunnel.css`. The caption, index, fog and panel use the theme variables

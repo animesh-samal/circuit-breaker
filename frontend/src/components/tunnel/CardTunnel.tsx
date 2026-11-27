@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { Link } from "react-router-dom";
 
 import { CV } from "../../content/profile";
-import { TUNNEL_CARDS, type TunnelCard } from "../../content/tunnel";
+import { buildTunnel, type TunnelCard } from "../../content/tunnel";
+import { useContent } from "../../lib/content";
 import { useReducedMotion } from "../../lib/useReducedMotion";
 import "../../styles/tunnel.css";
 import LiveBadge from "../home/LiveBadge";
@@ -38,7 +39,6 @@ import { FeaturedFace, SLOT, WallFace, buildWalls } from "./faces";
  * with the shape of the screen (see measure below), never the content, the
  * controls or the number of cards. */
 
-const N = TUNNEL_CARDS.length;
 const FEATURE_GAP = 720; // distance between featured cards along the corridor
 const NEAR = 180; // cards are removed once they pass this close to the camera
 const HALF_WIDTH = 760;
@@ -73,6 +73,8 @@ interface Camera {
   visible: boolean;
   raf: number;
   needs: boolean;
+  // Set once the opening glide has been set up, so new content does not replay it.
+  started: boolean;
 }
 
 function InsideBody({ card }: { card: TunnelCard }) {
@@ -144,7 +146,12 @@ function InsideBody({ card }: { card: TunnelCard }) {
 
 export default function CardTunnel() {
   const reduced = useReducedMotion();
-  const walls = useMemo(() => buildWalls(SLOTS), []);
+  // The cards follow the saved content: add a project and it gets a card.
+  const content = useContent();
+  const data = useMemo(() => buildTunnel(content), [content]);
+  const cards = data.cards;
+  const N = cards.length;
+  const walls = useMemo(() => buildWalls(SLOTS, data.material), [data.material]);
 
   const [cur, setCur] = useState(0);
   const [inside, setInside] = useState(false);
@@ -176,6 +183,7 @@ export default function CardTunnel() {
     visible: false,
     raf: 0,
     needs: true,
+    started: false,
   });
 
   /* Scroll to the spot where card i is in front of the camera. The numbers it
@@ -187,7 +195,7 @@ export default function CardTunnel() {
       top: c.start + (index / (N - 1)) * c.scrollable,
       behavior: reducedRef.current ? "auto" : "smooth",
     });
-  }, []);
+  }, [N]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -195,8 +203,13 @@ export default function CardTunnel() {
     if (!track || !sticky) return;
     const c = cam.current;
     c.lz = SLOTS * SLOT;
-    // Open a little way back so the first card glides into place.
-    c.cz = reduced ? 0 : -FEATURE_GAP * 0.6;
+    // Open a little way back so the first card glides into place. Only the
+    // first time: when saved content arrives a moment later the effect runs
+    // again, and replaying the glide would look like a glitch.
+    if (!c.started) {
+      c.started = true;
+      c.cz = reduced ? 0 : -FEATURE_GAP * 0.6;
+    }
     let last = performance.now();
 
     const draw = () => {
@@ -380,7 +393,7 @@ export default function CardTunnel() {
       sticky.removeEventListener("pointermove", onPointer);
       sticky.removeEventListener("pointerleave", onLeave);
     };
-  }, [walls, reduced, goTo]);
+  }, [walls, reduced, goTo, N]);
 
   /* The detail panel is a native dialog: it traps focus, closes on Escape and
      returns focus to the button that opened it, with no code of ours. */
@@ -403,7 +416,7 @@ export default function CardTunnel() {
     list.scrollLeft = chip.offsetLeft - (list.clientWidth - chip.offsetWidth) / 2;
   }, [cur, layout]);
 
-  const card = TUNNEL_CARDS[cur] ?? TUNNEL_CARDS[0];
+  const card = cards[Math.min(cur, N - 1)] ?? cards[0];
   if (!card) return null;
 
   return (
@@ -435,17 +448,18 @@ export default function CardTunnel() {
                 <WallFace wall={w} />
               </div>
             ))}
-            {TUNNEL_CARDS.map((c, i) => (
+            {cards.map((c, i) => (
               <div
                 key={c.id}
                 ref={(el) => {
                   featEls.current[i] = el;
                 }}
                 className="tn-card tn-feat"
-                data-face={c.id}
+                data-face={c.face}
+                data-tone={c.tone % 4}
                 onClick={() => (i === curRef.current ? setInside(true) : goTo(i))}
               >
-                <FeaturedFace id={c.id} />
+                <FeaturedFace card={c} data={data} />
               </div>
             ))}
           </div>
@@ -455,7 +469,7 @@ export default function CardTunnel() {
         <nav className="tn-index" aria-label="Portfolio cards">
           <p className="tn-index-head">Index</p>
           <ul ref={indexRef}>
-            {TUNNEL_CARDS.map((c, i) => (
+            {cards.map((c, i) => (
               <li key={c.id}>
                 <button type="button" aria-current={i === cur ? "true" : undefined} onClick={() => goTo(i)}>
                   {c.name}

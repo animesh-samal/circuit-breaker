@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Footer from "./components/Footer";
@@ -6,6 +6,7 @@ import GhibliScene from "./components/GhibliScene";
 import Nav from "./components/Nav";
 import QuickJump from "./components/QuickJump";
 import ScrollManager from "./components/ScrollManager";
+import { ContentProvider } from "./lib/content";
 import { SystemStatusProvider } from "./lib/systemStatus";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -15,12 +16,16 @@ import NotFound from "./pages/NotFound";
 import Terminal from "./pages/Terminal";
 import { useTheme } from "./lib/useTheme";
 
+// The admin panel is a separate chunk. Visitors never download it.
+const Admin = lazy(() => import("./pages/Admin"));
+
 export default function App() {
   const { theme, setTheme } = useTheme();
   const [jumpOpen, setJumpOpen] = useState(false);
 
   return (
     <SystemStatusProvider>
+      <ContentProvider>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -44,6 +49,14 @@ export default function App() {
           <Route path="/contact" element={<Navigate to="/#contact" replace />} />
           <Route path="/infrastructure" element={<Infrastructure />} />
           <Route path="/terminal" element={<Terminal />} />
+          <Route
+            path="/admin"
+            element={
+              <Suspense fallback={<p className="container page">Loading the admin panel...</p>}>
+                <Admin />
+              </Suspense>
+            }
+          />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="*" element={<NotFound />} />
@@ -51,6 +64,7 @@ export default function App() {
       </main>
 
       <Footer />
+      </ContentProvider>
     </SystemStatusProvider>
   );
 }

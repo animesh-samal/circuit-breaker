@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { JOURNEY, type JourneyIcon } from "../../content/profile";
+import type { JourneyIcon } from "../../content/profile";
+import { useContent } from "../../lib/content";
 import { useReducedMotion } from "../../lib/useReducedMotion";
 import Icon from "../Icons";
 import Reveal from "../Reveal";
@@ -110,6 +111,7 @@ function segment(a: Point, b: Point, edge: number | null): string {
 }
 
 export default function Journey() {
+  const { journey } = useContent();
   const mapRef = useRef<HTMLDivElement>(null);
   const [segments, setSegments] = useState<string[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -180,7 +182,7 @@ export default function Journey() {
       ([entry]) => {
         if (!entry?.isIntersecting) return;
         setDrawn(true);
-        timer = window.setTimeout(() => setSettled(true), 400 * JOURNEY.length + 600);
+        timer = window.setTimeout(() => setSettled(true), 400 * journey.length + 600);
         io.disconnect();
       },
       { rootMargin: "0px 0px -20% 0px" },
@@ -190,9 +192,9 @@ export default function Journey() {
       io.disconnect();
       window.clearTimeout(timer);
     };
-  }, [reduced]);
+  }, [reduced, journey.length]);
 
-  const reach = active ?? JOURNEY.length - 1;
+  const reach = active ?? journey.length - 1;
   const litPath = segments
     .slice(0, reach)
     .map((d, i) => (i === 0 ? d : d.replace(/^M [^L]+/, "")))
@@ -255,7 +257,7 @@ export default function Journey() {
           </svg>
 
           <ol className="journey-stops" aria-label="My journey so far">
-            {JOURNEY.map((stop, i) => {
+            {journey.map((stop, i) => {
               const { row, col } = cell(i);
               const ahead = active !== null && i > active;
               return (

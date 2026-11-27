@@ -1,8 +1,10 @@
-import { EDUCATION, JOB } from "../../content/profile";
+import { useContent } from "../../lib/content";
 import Reveal from "../Reveal";
 import { SectionHead } from "../SectionHead";
 
 export default function Experience() {
+  const { job, education } = useContent();
+
   return (
     <section id="experience" className="section section--alt">
       <div className="container">
@@ -15,29 +17,29 @@ export default function Experience() {
             <article className="job">
               <div className="job-when">
                 <span className="job-tag">Work</span>
-                <span>{JOB.dates}</span>
+                <span>{job.dates}</span>
               </div>
               <div>
-                <h3>{JOB.company}</h3>
-                <p className="job-role">{JOB.role}</p>
+                <h3>{job.company}</h3>
+                <p className="job-role">{job.role}</p>
                 <ul className="job-points">
-                  {JOB.points.map((point) => (
+                  {job.points.map((point) => (
                     <li key={point}>{point}</li>
                   ))}
                 </ul>
-                <p className="tech-line">{JOB.stack.join(" · ")}</p>
+                <p className="tech-line">{job.stack.join(" · ")}</p>
               </div>
             </article>
 
             <article className="job">
               <div className="job-when">
                 <span className="job-tag">Education</span>
-                <span>{EDUCATION.years}</span>
+                <span>{education.years}</span>
               </div>
               <div>
-                <h3>{EDUCATION.degree}</h3>
-                <p className="job-role">{EDUCATION.school}</p>
-                <p className="job-detail">{EDUCATION.detail}</p>
+                <h3>{education.degree}</h3>
+                <p className="job-role">{education.school}</p>
+                <p className="job-detail">{education.detail}</p>
               </div>
             </article>
           </div>
