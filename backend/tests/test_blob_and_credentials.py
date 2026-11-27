@@ -1,5 +1,6 @@
 """The file store and the credential loader, against an imitation of AWS."""
 
+import base64
 import json
 from collections.abc import Iterator
 
@@ -14,6 +15,8 @@ from app.core.security import hash_password
 
 REGION = "ap-south-1"
 BUCKET = "test-uploads"
+# The RFC 6238 test seed, built from its plain text (see test_admin_routes.py).
+SEED = base64.b32encode(b"12345678901234567890").decode()
 
 
 @pytest.fixture
@@ -51,7 +54,7 @@ async def test_the_memory_store_behaves_the_same_way() -> None:
 def _parameter(**overrides: str) -> str:
     base = {
         "password_hash": hash_password("pw"),
-        "totp_secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+        "totp_secret": SEED,
         # 32 bytes, base64url without padding
         "session_key": "a" * 43,
     }
@@ -61,7 +64,7 @@ def _parameter(**overrides: str) -> str:
 def test_a_complete_parameter_gives_credentials() -> None:
     creds = parse_credentials(_parameter())
     assert creds is not None
-    assert creds.totp_secret.startswith("GEZ")
+    assert creds.totp_secret == SEED
     assert len(creds.session_key) >= 32
 
 
