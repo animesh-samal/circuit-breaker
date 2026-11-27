@@ -7,7 +7,10 @@
 export const GITHUB = "https://github.com/animesh-samal";
 export const LINKEDIN = "https://www.linkedin.com/in/animesh-samal-a63366b9/";
 export const EMAIL = "animesh7667@gmail.com";
-export const CV = "/Animesh_Samal_CV.pdf";
+/* The CV link goes through the API, which serves the latest upload from the admin
+   panel and falls back to the PDF that ships with the site (public/Animesh_Samal_CV.pdf)
+   until one has been uploaded. */
+export const CV = "/api/cv";
 
 export const CONTACT_LINKS: Array<{ label: string; text: string; href: string; icon: "mail" | "linkedin" | "github" }> = [
   { label: "Email", text: EMAIL, href: `mailto:${EMAIL}`, icon: "mail" },

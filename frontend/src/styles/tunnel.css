@@ -505,31 +505,42 @@ html:has(.tn-dialog[open]) {
    Card faces
    --------------------------------------------------------------------------- */
 
-/* Palette of each featured card. */
+/* Palette of each featured card. Project cards share one face and take one of
+   four colourways by their position, so any number of projects works. */
 .tn-feat[data-face="hello"] {
   --f-bg: #f1ece3;
   --f-fg: #1b1a18;
   --f-ac: #d9501a;
 }
-.tn-feat[data-face="deloitte"] {
+.tn-feat[data-face="work"] {
   --f-bg: #f08a24;
   --f-fg: #1a1208;
   --f-ac: #ffffff;
 }
-.tn-feat[data-face="releases"] {
+.tn-feat[data-face="numbers"] {
   --f-bg: #0d0d10;
   --f-fg: #f4f1ea;
   --f-ac: #3b9eff;
 }
-.tn-feat[data-face="circuit"] {
+.tn-feat[data-face="project"][data-tone="0"] {
   --f-bg: #0b1b3a;
   --f-fg: #e9f0ff;
   --f-ac: #2ad4d0;
 }
-.tn-feat[data-face="solar"] {
+.tn-feat[data-face="project"][data-tone="1"] {
   --f-bg: #f2c94c;
   --f-fg: #2a1f05;
   --f-ac: #2a1f05;
+}
+.tn-feat[data-face="project"][data-tone="2"] {
+  --f-bg: #d9d0f5;
+  --f-fg: #241a4a;
+  --f-ac: #6b3cf0;
+}
+.tn-feat[data-face="project"][data-tone="3"] {
+  --f-bg: #c8321e;
+  --f-fg: #ffffff;
+  --f-ac: #ffd9a0;
 }
 .tn-feat[data-face="skills"] {
   --f-bg: #e7eee2;
@@ -573,22 +584,25 @@ html:has(.tn-dialog[open]) {
   border-radius: 6px;
 }
 
-.tn-feat[data-face="releases"] .tf-bar,
-.tn-feat[data-face="circuit"] .tf-bar,
+.tn-feat[data-face="numbers"] .tf-bar,
+.tn-feat[data-face="project"][data-tone="0"] .tf-bar,
+.tn-feat[data-face="project"][data-tone="3"] .tf-bar,
 .tn-feat[data-face="contact"] .tf-bar,
 .tn-wall.is-dark .tf-bar {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.tn-feat[data-face="releases"] .tf-bar b,
-.tn-feat[data-face="circuit"] .tf-bar b,
+.tn-feat[data-face="numbers"] .tf-bar b,
+.tn-feat[data-face="project"][data-tone="0"] .tf-bar b,
+.tn-feat[data-face="project"][data-tone="3"] .tf-bar b,
 .tn-feat[data-face="contact"] .tf-bar b,
 .tn-wall.is-dark .tf-bar b {
   background: rgba(255, 255, 255, 0.22);
 }
 
-.tn-feat[data-face="releases"] .tf-bar span,
-.tn-feat[data-face="circuit"] .tf-bar span,
+.tn-feat[data-face="numbers"] .tf-bar span,
+.tn-feat[data-face="project"][data-tone="0"] .tf-bar span,
+.tn-feat[data-face="project"][data-tone="3"] .tf-bar span,
 .tn-feat[data-face="contact"] .tf-bar span,
 .tn-wall.is-dark .tf-bar span {
   color: rgba(255, 255, 255, 0.5);
@@ -828,9 +842,9 @@ html:has(.tn-dialog[open]) {
   fill: #ffffff;
 }
 
-/* circuit */
-.tf-circuit .tf-hd {
-  max-width: 13ch;
+/* project: one face for every project; the colours come from the palette above */
+.tf-project .tf-hd {
+  max-width: 15ch;
   margin-top: 20px;
 }
 
@@ -839,21 +853,24 @@ html:has(.tn-dialog[open]) {
   margin: 16px 0 0;
   font-size: 11px;
   line-height: 1.9;
+  color: var(--f-ac);
+  opacity: 0.9;
+}
+
+.tf-project--0 .tf-flow {
   color: #8fd8ff;
 }
 
-.tf-circuit-pill {
+.tf-project-pill {
   position: absolute;
   right: 26px;
   bottom: 26px;
-  color: #04202a;
+  color: var(--f-bg);
   background: var(--f-ac);
 }
 
-/* solar */
-.tf-solar .tf-hd {
-  max-width: 12ch;
-  margin-top: 20px;
+.tf-project--0 .tf-project-pill {
+  color: #04202a;
 }
 
 .tf-sun {
@@ -876,14 +893,6 @@ html:has(.tn-dialog[open]) {
   border-radius: 4px;
   opacity: 0.9;
   transform: skewX(-28deg) rotate(-6deg);
-}
-
-.tf-solar-eq {
-  position: absolute;
-  right: 26px;
-  bottom: 26px;
-  margin: 0;
-  font-size: 11px;
 }
 
 /* skills */

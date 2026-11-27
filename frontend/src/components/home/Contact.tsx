@@ -1,4 +1,5 @@
-import { AVAILABILITY, CONTACT_LINKS, CV, EMAIL } from "../../content/profile";
+import { CONTACT_LINKS, CV, EMAIL } from "../../content/profile";
+import { useContent } from "../../lib/content";
 import Icon from "../Icons";
 import Reveal from "../Reveal";
 import { SectionHead } from "../SectionHead";
@@ -7,6 +8,8 @@ import { SectionHead } from "../SectionHead";
  * party with a public key in the page, or a new API endpoint with abuse
  * protection -- and a mailto link does the same job with none of that. */
 export default function Contact() {
+  const { availability } = useContent();
+
   return (
     <section id="contact" className="section section--alt">
       <div className="container contact-grid">
@@ -40,7 +43,7 @@ export default function Contact() {
           <div className="card card--static availability">
             <p className="card-kicker">Availability</p>
             <dl>
-              {AVAILABILITY.map((row) => (
+              {availability.map((row) => (
                 <div key={row.label}>
                   <dt>{row.label}</dt>
                   <dd>

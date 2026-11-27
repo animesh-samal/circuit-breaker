@@ -1,16 +1,10 @@
+import { EMAIL } from "../../content/profile";
 import {
-  CIRCUIT,
-  DATA_STAT,
-  DEPLOY_STAT,
-  EMAIL,
-  JOB,
-  SKILL_CHIPS,
-  SOLAR,
   WALL_CODE,
-  WALL_NUMBERS,
-  WALL_PHRASES,
   WALL_STACK,
-  type TunnelId,
+  type TunnelCard,
+  type TunnelData,
+  type WallMaterial,
 } from "../../content/tunnel";
 
 /* The faces of the cards. Each featured card is a tiny web page about one thing
@@ -35,8 +29,8 @@ function Bar({ url }: { url: string }) {
 
 /* ---------- the seven featured cards ---------- */
 
-export function FeaturedFace({ id }: { id: TunnelId }) {
-  switch (id) {
+export function FeaturedFace({ card, data }: { card: TunnelCard; data: TunnelData }) {
+  switch (card.face) {
     case "hello":
       return (
         <>
@@ -59,23 +53,23 @@ export function FeaturedFace({ id }: { id: TunnelId }) {
         </>
       );
 
-    case "deloitte":
+    case "work":
       return (
         <>
-          <Bar url="deloitte · ai & data" />
+          <Bar url="work" />
           <div className="tf-pg tf-deloitte">
             <div className="tf-nv">
-              <span>{JOB.company}</span>
+              <span>{data.job.company}</span>
               <span>
-                <span>ETL</span>
-                <span>SQL</span>
-                <span>AWS S3</span>
+                {data.job.stack.slice(0, 3).map((s) => (
+                  <span key={s}>{s}</span>
+                ))}
               </span>
             </div>
-            <div className="tf-hd tf-hd--l">Python pipelines for healthcare data.</div>
+            <div className="tf-hd tf-hd--l">{data.job.role}</div>
             <div className="tf-big tf-deloitte-num">
-              {DATA_STAT.value}
-              <small> {DATA_STAT.label}</small>
+              {data.second.value}
+              <small> {data.second.label}</small>
             </div>
             <div className="tf-bars" aria-hidden="true">
               <i />
@@ -88,21 +82,21 @@ export function FeaturedFace({ id }: { id: TunnelId }) {
         </>
       );
 
-    case "releases":
+    case "numbers":
       return (
         <>
-          <Bar url="release · pipeline" />
+          <Bar url="in numbers" />
           <div className="tf-pg tf-releases">
             <div className="tf-nv">
-              <span>Release engineering</span>
+              <span>{data.job.company}</span>
               <span>
-                <span>GitLab CI</span>
-                <span>Git</span>
-                <span>SAST</span>
+                {data.job.stack.slice(0, 3).map((s) => (
+                  <span key={s}>{s}</span>
+                ))}
               </span>
             </div>
-            <div className="tf-big tf-releases-num">{DEPLOY_STAT.value}</div>
-            <p className="tf-sm">{DEPLOY_STAT.label}</p>
+            <div className="tf-big tf-releases-num">{data.lead.value}</div>
+            <p className="tf-sm">{data.lead.label}</p>
             <svg className="tf-branch" viewBox="0 0 520 70" aria-hidden="true">
               <path d="M0 50H520M60 50C90 50 90 18 130 18H250M250 18C290 18 290 50 330 50" />
               <circle cx="60" cy="50" r="5" />
@@ -114,45 +108,35 @@ export function FeaturedFace({ id }: { id: TunnelId }) {
         </>
       );
 
-    case "circuit":
+    case "project": {
+      const project = card.project;
       return (
         <>
-          <Bar url="animesh.space/infrastructure" />
-          <div className="tf-pg tf-circuit">
+          <Bar url={project ? project.title.toLowerCase() : "project"} />
+          <div className={`tf-pg tf-project tf-project--${card.tone % 4}`}>
             <div className="tf-nv">
-              <span>{CIRCUIT.title}</span>
+              <span>{project?.title}</span>
               <span>
-                <span>Terraform</span>
-                <span>Kubernetes</span>
-                <span>AWS</span>
+                {project?.stack.slice(0, 3).map((s) => (
+                  <span key={s}>{s}</span>
+                ))}
               </span>
             </div>
-            <div className="tf-hd tf-hd--l">A site that watches itself run.</div>
-            <p className="tf-mono tf-flow">{CIRCUIT.flow.replace(" (build · scan · push)", "")}</p>
-            <span className="tf-pill tf-circuit-pill">Live console</span>
+            <div className="tf-hd tf-hd--l">{card.say}</div>
+            {project?.flow && <p className="tf-mono tf-flow">{project.flow.replace(/ \([^)]*\)/g, "")}</p>}
+            {card.tone % 4 === 1 && (
+              <>
+                <div className="tf-sun" aria-hidden="true" />
+                <div className="tf-panel" aria-hidden="true" />
+              </>
+            )}
+            {(project?.live || project?.source) && (
+              <span className="tf-pill tf-project-pill">{project.live ? "Live" : "Source"}</span>
+            )}
           </div>
         </>
       );
-
-    case "solar":
-      return (
-        <>
-          <Bar url="thesis · solaroptimate" />
-          <div className="tf-pg tf-solar">
-            <div className="tf-nv">
-              <span>{SOLAR.title}</span>
-              <span>
-                <span>Python</span>
-                <span>XGBoost</span>
-              </span>
-            </div>
-            <div className="tf-hd tf-hd--l">The best angle, from the weather.</div>
-            <div className="tf-sun" aria-hidden="true" />
-            <div className="tf-panel" aria-hidden="true" />
-            <p className="tf-mono tf-solar-eq">θ = f(weather)</p>
-          </div>
-        </>
-      );
+    }
 
     case "skills":
       return (
@@ -164,7 +148,7 @@ export function FeaturedFace({ id }: { id: TunnelId }) {
             </div>
             <div className="tf-hd tf-hd--l">Tools I use every day.</div>
             <div className="tf-chips">
-              {SKILL_CHIPS.map((s) => (
+              {data.skillChips.map((s) => (
                 <span className="tf-chip" key={s}>
                   {s}
                 </span>
@@ -259,14 +243,21 @@ function pick<T>(list: readonly T[], r: () => number): T {
   return list[Math.floor(r() * list.length)] ?? (list[0] as T);
 }
 
-function makeWall(r: () => number, side: Side, a: number, k: number, off: number): Wall {
+function makeWall(
+  r: () => number,
+  material: WallMaterial,
+  side: Side,
+  a: number,
+  k: number,
+  off: number,
+): Wall {
   const kind = KINDS[Math.floor(r() * KINDS.length)] ?? "page";
   const palette = pick(PALETTES, r);
   let bg = palette[0];
   let fg = palette[1];
   const ac = palette[2];
   let dark = bg.charAt(1) < "8" && bg !== "#c8321e";
-  const number = pick(WALL_NUMBERS, r);
+  const number = pick(material.numbers, r);
   const lines = pick(WALL_CODE, r);
   const chipCount = 5 + Math.floor(r() * 3);
 
@@ -290,7 +281,7 @@ function makeWall(r: () => number, side: Side, a: number, k: number, off: number
     fg,
     ac,
     dark,
-    text: kind === "number" ? number[0] : pick(WALL_PHRASES, r),
+    text: kind === "number" ? number[0] : pick(material.phrases.length ? material.phrases : [""], r),
     sub: number[1],
     lines,
     chips: WALL_STACK.slice(0, chipCount),
@@ -302,11 +293,11 @@ function makeWall(r: () => number, side: Side, a: number, k: number, off: number
 
 /* Left and right walls get three rows, the floor and ceiling four columns. Each
    row is shifted by half a slot from its neighbour. */
-export function buildWalls(slots: number): Wall[] {
+export function buildWalls(slots: number, material: WallMaterial): Wall[] {
   const r = rng(21);
   const walls: Wall[] = [];
   const add = (side: Side, a: number, off: number) => {
-    for (let k = 0; k < slots; k++) walls.push(makeWall(r, side, a, k, off));
+    for (let k = 0; k < slots; k++) walls.push(makeWall(r, material, side, a, k, off));
   };
   [-262, 0, 262].forEach((y, row) => {
     add("L", y, (row % 2) * (SLOT / 2));
