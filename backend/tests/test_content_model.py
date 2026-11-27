@@ -60,6 +60,13 @@ def test_unsafe_links_are_rejected(link: str) -> None:
         Project(**_project(source=link))
 
 
+def test_a_tagline_is_optional_and_short() -> None:
+    assert Project(**_project()).tagline is None
+    assert Project(**_project(tagline="A site that watches itself run.")).tagline is not None
+    with pytest.raises(ValidationError):
+        Project(**_project(tagline="x" * 91))
+
+
 def test_text_is_trimmed() -> None:
     assert Project(**_project(title="  Padded  ")).title == "Padded"
 

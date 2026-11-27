@@ -92,6 +92,9 @@ class Project(_Strict):
     tag: Label
     title: Label
     blurb: Paragraph
+    # One short line for the card in the home page tunnel. When it is missing the
+    # site uses the start of the blurb instead.
+    tagline: Annotated[str, StringConstraints(strip_whitespace=True, max_length=90)] | None = None
     flow: Annotated[str, StringConstraints(strip_whitespace=True, max_length=240)] = ""
     extra: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1500)] | None = None
     stack: Annotated[list[Tag], Field(max_length=16)] = []
